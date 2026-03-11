@@ -1,1 +1,74 @@
-<p>nearest-transport works!</p>
+<div class="bg-white rounded-lg shadow p-4">
+    <h2 class="text-lg font-semibold mb-3 flex items-center">
+        <span class="mr-2">📍</span> Nearest Transport
+    </h2>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="text-sm text-gray-500 mt-2">Finding nearby stops...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && transports.length === 0" class="text-center py-8">
+        <div class="text-4xl mb-2">🚏</div>
+        <p class="text-gray-500">No nearby transport found</p>
+        <p class="text-xs text-gray-400 mt-1">Try selecting an agency first</p>
+    </div>
+
+    <!-- Transport List -->
+    <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+        <div *ngFor="let transport of transports; let i = index"
+            class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-all hover:shadow-md"
+            (click)="onStopClick(transport.stop.stop_lat, transport.stop.stop_lon)">
+
+            <!-- Header with Rank -->
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex items-center">
+                    <span
+                        class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold mr-2">
+                        {{ i + 1 }}
+                    </span>
+                    <span class="font-medium">{{ transport.route.route_short_name }}</span>
+                </div>
+                <span class="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                    {{ transport.distance.toFixed(2) }} km
+                </span>
+            </div>
+
+            <!-- Stop Name -->
+            <div class="text-sm font-medium mb-1">{{ transport.stop.stop_name }}</div>
+
+            <!-- Times -->
+            <div class="flex justify-between items-center text-sm mb-2">
+                <div>
+                    <span class="text-gray-500">Depart:</span>
+                    <span class="font-medium text-green-600 ml-1">{{ formatTime(transport.departureTime) }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Arrive:</span>
+                    <span class="font-medium text-blue-600 ml-1">{{ formatTime(transport.arrivalTime) }}</span>
+                </div>
+            </div>
+
+            <!-- Live Vehicle Info -->
+            <div *ngIf="transport.vehicle" class="text-xs bg-blue-50 p-2 rounded">
+                <div class="flex items-center text-blue-700">
+                    <span class="mr-1">🚌</span>
+                    <span class="font-medium">Live:</span>
+                    <span class="ml-1">{{ transport.vehicle.lat.toFixed(4) }}, {{ transport.vehicle.lon.toFixed(4)
+                        }}</span>
+                </div>
+                <div class="flex justify-between text-blue-600 mt-1">
+                    <span>Speed: {{ transport.vehicle.speed }} km/h</span>
+                    <span>{{ getVehicleStatus(transport) }}</span>
+                </div>
+            </div>
+
+            <!-- No Live Data -->
+            <div *ngIf="!transport.vehicle" class="text-xs text-gray-400 bg-gray-50 p-2 rounded">
+                No live vehicle data available
+            </div>
+        </div>
+    </div>
+</div>

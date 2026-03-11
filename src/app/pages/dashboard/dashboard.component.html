@@ -1,1 +1,84 @@
-<p>dashboard works!</p>
+<div class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex justify-between items-center">
+          <h1 class="text-2xl font-bold text-gray-900">
+            🚍 Real-Time Transport Dashboard
+          </h1>
+          <div class="text-sm text-gray-500">
+            Last updated: {{ lastUpdated | date:'medium' }}
+          </div>
+        </div>
+      </div>
+    </header>
+  
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <!-- Filters Bar Component -->
+      <app-filters-bar
+        [feeds]="feeds"
+        [routes]="routes"
+        [loading]="loading.routes"
+        (agencyChange)="onAgencyChange($event)"
+        (categoryChange)="onCategoryChange($event)"
+        (routeSelect)="onRouteSelect($event)"
+        (stopSearch)="loadStops($event)">
+      </app-filters-bar>
+  
+      <!-- Stats Cards Component -->
+      <app-stats-cards
+        [vehicles]="vehicles"
+        [routes]="routes"
+        [nearestTransports]="nearestTransports"
+        [selectedAgency]="selectedAgency"
+        [lastUpdated]="lastUpdated">
+      </app-stats-cards>
+  
+      <!-- Main Grid: Map + Sidebar -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Map Column (2/3 width) -->
+        <div class="lg:col-span-2">
+          <app-transport-map
+            [vehicles]="vehicles"
+            [stops]="stops"
+            [userLocation]="userLocation"
+            [center]="mapCenter"
+            [zoom]="mapZoom"
+            (centerChange)="onMapCenterChange($event)"
+            (markerClick)="onMarkerClick($event)">
+          </app-transport-map>
+        </div>
+  
+        <!-- Sidebar Column (1/3 width) -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Nearest Transport Component -->
+          <app-nearest-transport
+            [transports]="nearestTransports"
+            [userLocation]="userLocation"
+            [loading]="loading.nearest"
+            (selectStop)="onSelectMapLocation($event)">
+          </app-nearest-transport>
+  
+          <!-- Live Vehicles List Component -->
+          <app-live-vehicle-list
+            [vehicles]="vehicles"
+            [loading]="loading.vehicles"
+            (selectVehicle)="onSelectMapLocation($event)"
+            (refresh)="refreshVehicles()">
+          </app-live-vehicle-list>
+        </div>
+      </div>
+  
+      <!-- Timetable Modal/Section -->
+      <div *ngIf="showTimetable" class="mt-6">
+        <app-timetable-view
+          [stops]="tripStops"
+          [route]="selectedRoute"
+          [loading]="loading.timetable"
+          (selectStop)="onSelectMapLocation($event)"
+          (close)="closeTimetable()">
+        </app-timetable-view>
+      </div>
+    </div>
+  </div>

@@ -1,1 +1,49 @@
-<p>transport-map works!</p>
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="h-[600px] w-full relative">
+        <google-map [center]="center" [zoom]="zoom" [options]="options" (mapClick)="onMapClick()" height="100%"
+            width="100%">
+
+            <!-- User Location Marker -->
+            <map-marker *ngIf="userMarker" [position]="userMarker.position" [title]="userMarker.title"
+                [options]="userMarker.options" (mapClick)="onMarkerClick(userMarker.id)">
+            </map-marker>
+
+            <!-- Vehicle Markers (Live Transport) -->
+            <map-marker *ngFor="let marker of vehicleMarkers; trackBy: trackByMarkerId" [position]="marker.position"
+                [title]="marker.title" [options]="marker.options" (mapClick)="onMarkerClick(marker.id)">
+            </map-marker>
+
+            <!-- Stop Markers -->
+            <map-marker *ngFor="let marker of stopMarkers; trackBy: trackByMarkerId" [position]="marker.position"
+                [title]="marker.title" [options]="marker.options" (mapClick)="onMarkerClick(marker.id)">
+            </map-marker>
+
+            <!-- Info Window -->
+            <map-info-window #infoWindow>
+                <div [innerHTML]="selectedInfo"></div>
+            </map-info-window>
+        </google-map>
+
+        <!-- Map Legend Overlay -->
+        <div class="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-sm z-10">
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span>Moving Vehicles</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                    <span>Stopped Vehicles</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                    <span>Stops</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                    <span>Your Location</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

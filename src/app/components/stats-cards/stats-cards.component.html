@@ -1,1 +1,59 @@
-<p>stats-cards works!</p>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Active Vehicles -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-sm text-gray-500">Active Vehicles</div>
+                <div class="text-2xl font-bold">{{ vehicles.length }}</div>
+                <div class="text-xs text-green-500 mt-1">
+                    Updated {{ lastUpdated | date:'HH:mm:ss' }}
+                </div>
+            </div>
+            <div class="text-3xl">🚌</div>
+        </div>
+    </div>
+
+    <!-- Routes Available -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-sm text-gray-500">Routes Available</div>
+                <div class="text-2xl font-bold">{{ routes.length }}</div>
+                <div class="text-xs text-gray-500 mt-1">
+                    {{ getUniqueRoutes() }} unique
+                </div>
+            </div>
+            <div class="text-3xl">🛣️</div>
+        </div>
+    </div>
+
+    <!-- Stops Nearby -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-sm text-gray-500">Stops Nearby</div>
+                <div class="text-2xl font-bold">{{ nearestTransports.length }}</div>
+                <div class="text-xs text-gray-500 mt-1">
+                    Within {{ getMaxDistance() }}km
+                </div>
+            </div>
+            <div class="text-3xl">📍</div>
+        </div>
+    </div>
+
+    <!-- Selected Agency -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-sm text-gray-500">Selected Agency</div>
+                <div class="text-2xl font-bold truncate" [title]="selectedAgency">
+                    {{ selectedAgency || 'None' }}
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    {{ getAgencyStatus() }}
+                </div>
+            </div>
+            <div class="text-3xl">🏢</div>
+        </div>
+    </div>
+</div>

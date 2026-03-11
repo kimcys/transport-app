@@ -1,1 +1,62 @@
-<p>filters-bar works!</p>
+<div class="bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Filters</h3>
+        <button (click)="clearFilters()" class="text-sm text-blue-600 hover:text-blue-800">
+            Clear All
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Agency Dropdown -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+                Agency <span class="text-red-500">*</span>
+            </label>
+            <select [(ngModel)]="selectedAgency" (change)="onAgencySelect()"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Select Agency</option>
+                <option *ngFor="let agency of agencies" [value]="agency">
+                    {{ agency }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Category Dropdown -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select [(ngModel)]="selectedCategory" (change)="onCategorySelect()" [disabled]="!selectedAgency"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed">
+                <option value="">All Categories</option>
+                <option *ngFor="let category of categories" [value]="category">
+                    {{ category | titlecase }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Route Select -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Route</label>
+            <select [(ngModel)]="selectedRoute" (change)="onRouteSelect()" [disabled]="!selectedAgency || loading"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed">
+                <option [ngValue]="null">Select Route</option>
+                <option *ngFor="let route of routes" [ngValue]="route">
+                    {{ route.route_short_name }} - {{ route.route_long_name | slice:0:30 }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Stop Search -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Search Stops</label>
+            <div class="flex">
+                <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearchStop()" [disabled]="!selectedAgency"
+                    placeholder="Enter stop name..."
+                    class="flex-1 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100">
+                <button (click)="onSearchStop()" [disabled]="!selectedAgency"
+                    class="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 disabled:bg-gray-400">
+                    🔍
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

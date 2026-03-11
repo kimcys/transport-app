@@ -1,1 +1,100 @@
-<p>timetable-view works!</p>
+<div class="bg-white rounded-lg shadow p-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-semibold flex items-center">
+            <span class="mr-2">📅</span> Timetable
+            <span *ngIf="route" class="ml-2 text-sm font-normal text-gray-500">
+                {{ route.route_short_name }} - {{ route.route_long_name }}
+            </span>
+        </h2>
+        <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600">
+            ✕
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="text-sm text-gray-500 mt-2">Loading schedule...</p>
+    </div>
+
+    <!-- Timetable -->
+    <div *ngIf="!loading && stops.length > 0" class="space-y-2 max-h-[500px] overflow-y-auto">
+        <!-- Summary Info -->
+        <div class="bg-blue-50 p-3 rounded-lg mb-3">
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                    <span class="text-gray-600">First Stop:</span>
+                    <div class="font-medium">{{ stops[0].stop_name }}</div>
+                    <div class="text-xs text-gray-500">Dep: {{ formatTime(stops[0].departure_time) }}</div>
+                </div>
+                <div>
+                    <span class="text-gray-600">Last Stop:</span>
+                    <div class="font-medium">{{ stops[stops.length-1].stop_name }}</div>
+                    <div class="text-xs text-gray-500">Arr: {{ formatTime(stops[stops.length-1].arrival_time) }}</div>
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 mt-2">
+                Total Duration: {{ calculateDuration(stops[0].arrival_time, stops[stops.length-1].departure_time) }}
+            </div>
+        </div>
+
+        <!-- Stop List -->
+        <div *ngFor="let stop of stops; let i = index" class="border rounded-lg hover:bg-gray-50 cursor-pointer"
+            (click)="toggleStop(i)">
+
+            <div class="p-3 flex items-center">
+                <!-- Stop Number -->
+                <div
+                    class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm mr-3">
+                    {{ stop.stop_sequence }}
+                </div>
+
+                <!-- Stop Info -->
+                <div class="flex-1">
+                    <div class="font-medium">{{ stop.stop_name }}</div>
+                    <div class="text-xs text-gray-500 flex items-center mt-1">
+                        <span class="mr-3">Arr: {{ formatTime(stop.arrival_time) }}</span>
+                        <span>Dep: {{ formatTime(stop.departure_time) }}</span>
+                    </div>
+                </div>
+
+                <!-- Expand/Collapse Icon -->
+                <span class="text-gray-400">
+                    {{ expandedStops.has(i) ? '▼' : '▶' }}
+                </span>
+            </div>
+
+            <!-- Expanded Details -->
+            <div *ngIf="expandedStops.has(i)" class="border-t bg-gray-50 p-3 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-gray-500">Stop ID:</span>
+                        <span class="ml-1 font-mono">{{ stop.stop_id }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Sequence:</span>
+                        <span class="ml-1">{{ stop.stop_sequence }}</span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-gray-500">Location:</span>
+                        <span class="ml-1">{{ stop.stop_lat.toFixed(4) }}, {{ stop.stop_lon.toFixed(4) }}</span>
+                    </div>
+                    <div class="col-span-2 mt-2">
+                        <button (click)="onStopClick(stop.stop_lat, stop.stop_lon); $event.stopPropagation()"
+                            class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                            Show on Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && stops.length === 0" class="text-center py-8">
+        <div class="text-4xl mb-2">🗓️</div>
+        <p class="text-gray-500">No schedule available</p>
+        <p class="text-xs text-gray-400 mt-1">Select a route to view timetable</p>
+    </div>
+</div>
