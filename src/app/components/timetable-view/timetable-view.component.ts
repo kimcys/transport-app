@@ -14,7 +14,7 @@ export class TimetableViewComponent {
   @Input() stops: TripStop[] = [];
   @Input() route: Route | null = null;
   @Input() loading = false;
-  
+
   @Output() selectStop = new EventEmitter<{ lat: number; lng: number }>();
   @Output() close = new EventEmitter<void>();
 
@@ -50,7 +50,7 @@ export class TimetableViewComponent {
     const arr = this.timeToMinutes(arrival);
     const dep = this.timeToMinutes(departure);
     const diff = dep - arr;
-    
+
     if (diff <= 0) return '0 min';
     return `${diff} min`;
   }
@@ -59,4 +59,20 @@ export class TimetableViewComponent {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   }
+
+  isDataComplete(): boolean {
+    if (!this.stops || this.stops.length === 0) return false;
+
+    // Check if all required fields are present
+    return this.stops.every(stop =>
+      stop.stop_id &&
+      stop.stop_name &&
+      stop.arrival_time &&
+      stop.departure_time &&
+      stop.stop_sequence !== undefined &&
+      stop.stop_lat !== undefined &&
+      stop.stop_lon !== undefined
+    );
+  }
+
 }
