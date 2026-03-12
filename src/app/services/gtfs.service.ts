@@ -19,7 +19,7 @@ export class GtfsService {
     return this.http.get<Feed>(`${this.apiUrl}/feeds`);
   }
 
-  getLatestVehiclePositions(agency?: string, category?: string, limit: number = 100): Observable<VehiclePosition[]> {
+  getLatestVehiclePositions(agency?: string, category?: string, limit: number = 10000): Observable<VehiclePosition[]> {
     let params = new HttpParams().set('limit', limit.toString());
 
     if (agency) params = params.set('agency', agency);
@@ -28,7 +28,7 @@ export class GtfsService {
     return this.http.get<VehiclePosition[]>(`${this.apiUrl}/vehicle-positions/latest`, { params });
   }
 
-  getRoutes(agency: string, category?: string, query?: string, limit: number = 100, offset: number = 0): Observable<Route[]> {
+  getRoutes(agency: string, category?: string, query?: string, limit: number = 10000, offset: number = 0): Observable<Route[]> {
     let params = new HttpParams()
       .set('agency', agency)
       .set('limit', limit.toString())
@@ -47,7 +47,7 @@ export class GtfsService {
     return this.http.get<Trip[]>(`${this.apiUrl}/routes/${routeId}/trips`, { params });
   }
 
-  getStops(agency: string, category?: string, query?: string, limit: number = 100, offset: number = 0): Observable<Stop[]> {
+  getStops(agency: string, category?: string, query?: string, limit: number = 10000, offset: number = 0): Observable<Stop[]> {
     let params = new HttpParams()
       .set('agency', agency)
       .set('limit', limit.toString())
