@@ -3,20 +3,19 @@
         <google-map [center]="center" [zoom]="zoom" [options]="options" (mapClick)="onMapClick()" height="100%"
             width="100%">
 
-            <!-- User Location Marker -->
-            <map-marker *ngIf="userMarker" [position]="userMarker.position" [title]="userMarker.title"
-                [options]="userMarker.options" (mapClick)="onMarkerClick(userMarker.id)">
-            </map-marker>
-
             <!-- Vehicle Markers (Live Transport) -->
-            <map-marker *ngFor="let marker of vehicleMarkers; trackBy: trackByMarkerId" [position]="marker.position"
-                [title]="marker.title" [options]="marker.options" (mapClick)="onMarkerClick(marker.id)">
-            </map-marker>
+            <map-marker *ngFor="let marker of vehicleMarkers; trackBy: trackByMarkerId" #m="mapMarker"
+                [position]="marker.position" [title]="marker.title" [options]="marker.options"
+                (mapClick)="onMarkerClick(m, marker)"></map-marker>
 
             <!-- Stop Markers -->
-            <map-marker *ngFor="let marker of stopMarkers; trackBy: trackByMarkerId" [position]="marker.position"
-                [title]="marker.title" [options]="marker.options" (mapClick)="onMarkerClick(marker.id)">
-            </map-marker>
+            <map-marker *ngFor="let marker of stopMarkers; trackBy: trackByMarkerId" #m="mapMarker"
+                [position]="marker.position" [title]="marker.title" [options]="marker.options"
+                (mapClick)="onMarkerClick(m, marker)"></map-marker>
+
+            <!-- User Location Marker -->
+            <map-marker *ngIf="userMarker" #m="mapMarker" [position]="userMarker.position" [title]="userMarker.title"
+                [options]="userMarker.options" (mapClick)="onMarkerClick(m, userMarker)"></map-marker>
 
             <!-- Info Window -->
             <map-info-window #infoWindow>

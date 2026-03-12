@@ -78,7 +78,7 @@ export class DashboardComponent {
   ngOnInit() {
     this.loadInitialData();
     this.subscribeToLocation();
-    this.startVehiclePolling();
+    this.loadVehicles();
   }
 
   ngOnDestroy() {
@@ -211,33 +211,31 @@ export class DashboardComponent {
   }
 
   // ============== VEHICLE POLLING ==============
-  startVehiclePolling() {
-    // Poll every 30 seconds
-    const pollSub = interval(30000).pipe(
-      switchMap(() => {
-        this.loading.vehicles = true;
-        return this.gtfsService.getLatestVehiclePositions(
-          this.selectedAgency, 
-          this.selectedCategory
-        );
-      })
-    ).subscribe({
-      next: (vehicles) => {
-        this.vehicles = vehicles;
-        this.loading.vehicles = false;
-        this.lastUpdated = new Date();
-      },
-      error: (err) => {
-        console.error('Error loading vehicles', err);
-        this.loading.vehicles = false;
-      }
-    });
+  // startVehiclePolling() {
+  //   const pollSub = interval(30000).pipe(
+  //     switchMap(() => {
+  //       this.loading.vehicles = true;
+  //       return this.gtfsService.getLatestVehiclePositions(
+  //         this.selectedAgency, 
+  //         this.selectedCategory
+  //       );
+  //     })
+  //   ).subscribe({
+  //     next: (vehicles) => {
+  //       this.vehicles = vehicles;
+  //       this.loading.vehicles = false;
+  //       this.lastUpdated = new Date();
+  //     },
+  //     error: (err) => {
+  //       console.error('Error loading vehicles', err);
+  //       this.loading.vehicles = false;
+  //     }
+  //   });
   
-    // Initial load
-    this.loadVehicles();
+  //   this.loadVehicles();
   
-    this.subscriptions.push(pollSub);
-  }
+  //   this.subscriptions.push(pollSub);
+  // }
   
   // Separate method for loading vehicles
   loadVehicles() {

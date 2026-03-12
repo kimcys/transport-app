@@ -30,10 +30,6 @@ export class LiveVehicleListComponent {
     this.selectVehicle.emit({ lat: vehicle.lat, lng: vehicle.lon });
   }
 
-  onRefresh() {
-    this.refresh.emit();
-  }
-
   trackByVehicleId(index: number, vehicle: VehiclePosition): string {
     return vehicle.vehicle_id;
   }
