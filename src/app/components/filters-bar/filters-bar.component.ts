@@ -39,27 +39,32 @@ export class FiltersBarComponent implements OnInit, OnChanges {
 
   extractAgencies() {
     if (this.feeds) {
+      // Extract agency names from feed objects
+      const staticAgencies = this.feeds.static.map((feed: any) => feed.agency);
+      const realtimeAgencies = this.feeds.realtime.map((feed: any) => feed.agency);
+
       this.agencies = [...new Set([
-        ...this.feeds.static,
-        ...this.feeds.realtime
+        ...staticAgencies,
+        ...realtimeAgencies
       ])];
     }
   }
 
   onAgencySelect() {
     if (this.selectedAgency && this.feeds) {
-      // Extract categories for selected agency
-      const staticFeeds = this.feeds.static.filter(f => f.startsWith(this.selectedAgency));
-      const realtimeFeeds = this.feeds.realtime.filter(f => f.startsWith(this.selectedAgency));
+      // Extract categories for selected agency from feed objects
+      const staticFeeds = this.feeds.static.filter((f: any) => f.agency === this.selectedAgency);
+      const realtimeFeeds = this.feeds.realtime.filter((f: any) => f.agency === this.selectedAgency);
 
       this.categories = [...new Set([
-        ...staticFeeds.map(f => f.split('/')[1]),
-        ...realtimeFeeds.map(f => f.split('/')[1])
-      ])].filter(Boolean);
+        ...staticFeeds.map((f: any) => f.category).filter(Boolean),
+        ...realtimeFeeds.map((f: any) => f.category).filter(Boolean)
+      ])];
 
       this.agencyChange.emit(this.selectedAgency);
     }
   }
+
 
   onCategorySelect() {
     this.categoryChange.emit(this.selectedCategory);

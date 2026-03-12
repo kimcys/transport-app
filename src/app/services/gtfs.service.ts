@@ -73,16 +73,20 @@ export class GtfsService {
   }
 
   extractAgenciesFromFeeds(feeds: Feed): string[] {
-    return [...new Set([...feeds.static, ...feeds.realtime])];
+    const staticAgencies = feeds.static.map((feed: any) => feed.agency);
+    const realtimeAgencies = feeds.realtime.map((feed: any) => feed.agency);
+    
+    return [...new Set([...staticAgencies, ...realtimeAgencies])];
   }
-
+  
   extractCategoriesFromFeeds(feeds: Feed, agency: string): string[] {
-    const staticFeeds = feeds.static.filter(feed => feed.startsWith(agency));
-    const realtimeFeeds = feeds.realtime.filter(feed => feed.startsWith(agency));
-
+    const staticFeeds = feeds.static.filter((feed: any) => feed.agency === agency);
+    const realtimeFeeds = feeds.realtime.filter((feed: any) => feed.agency === agency);
+  
     return [...new Set([
-      ...staticFeeds.map(f => f.split('/')[1]),
-      ...realtimeFeeds.map(f => f.split('/')[1])
-    ])].filter(Boolean);
+      ...staticFeeds.map((f: any) => f.category).filter(Boolean),
+      ...realtimeFeeds.map((f: any) => f.category).filter(Boolean)
+    ])];
   }
+  
 }

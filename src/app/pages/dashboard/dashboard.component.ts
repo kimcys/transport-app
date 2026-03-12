@@ -120,23 +120,27 @@ export class DashboardComponent {
     this.selectedCategory = '';
     this.selectedRoute = null;
     this.showTimetable = false;
-
+  
     if (agency) {
       this.loadRoutes();
       this.loadStops();
+      this.loadVehicles(); // Add this
       this.findNearestTransport();
     } else {
       this.routes = [];
       this.stops = [];
+      this.vehicles = []; // Clear vehicles
       this.nearestTransports = [];
     }
   }
-
+  
   onCategoryChange(category: string) {
     this.selectedCategory = category;
     this.loadRoutes();
     this.loadStops();
+    this.loadVehicles(); // Add this
   }
+  
 
   loadRoutes() {
     if (!this.selectedAgency) return;
