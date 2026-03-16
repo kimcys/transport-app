@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Feed } from '../../models/feed.model';
 import { VehiclePosition } from '../../models/vehicle.model';
-import { Route } from '../../models/route.model';
+import { Route, Trip } from '../../models/route.model';
 import { Stop, TripStop } from '../../models/stop.model';
 import { NearestTransport } from '../../models/trip.model';
 import { LocationService, UserLocation } from '../../services/location.service';
@@ -37,6 +37,7 @@ export class DashboardComponent {
   routes: Route[] = [];
   stops: Stop[] = [];
   tripStops: TripStop[] = [];
+  trips: Trip[] = [];
   nearestTransports: NearestTransport[] = [];
 
   // Selected items
@@ -120,7 +121,7 @@ export class DashboardComponent {
     this.selectedCategory = '';
     this.selectedRoute = null;
     this.showTimetable = false;
-  
+
     if (agency) {
       this.loadRoutes();
       this.loadStops();
@@ -133,14 +134,14 @@ export class DashboardComponent {
       this.nearestTransports = [];
     }
   }
-  
+
   onCategoryChange(category: string) {
     this.selectedCategory = category;
     this.loadRoutes();
     this.loadStops();
     this.loadVehicles(); // Add this
   }
-  
+
 
   loadRoutes() {
     if (!this.selectedAgency) return;
@@ -182,9 +183,12 @@ export class DashboardComponent {
     this.gtfsService.getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
       .subscribe({
         next: (trips) => {
+          this.trips = trips;
           if (trips.length > 0) {
-            this.selectedTripId = trips[0].trip_id;
-            this.loadTripStopTimes();
+            // Load stop times for ALL trips, not just the first one
+            this.loadAllTripStopTimes(trips);
+          } else {
+            this.loading.timetable = false;
           }
         },
         error: (err) => {
@@ -192,6 +196,38 @@ export class DashboardComponent {
           this.loading.timetable = false;
         }
       });
+  }
+
+  // New method to load stop times for all trips
+  loadAllTripStopTimes(trips: Trip[]) {
+    let completedRequests = 0;
+    const allStopTimes: TripStop[] = [];
+
+    trips.forEach(trip => {
+      this.gtfsService.getStopTimesForTrip(this.selectedAgency, trip.trip_id)
+        .subscribe({
+          next: (stops) => {
+            allStopTimes.push(...stops);
+            completedRequests++;
+
+            // When all requests are complete, update the component
+            if (completedRequests === trips.length) {
+              this.tripStops = allStopTimes;
+              this.loading.timetable = false;
+            }
+          },
+          error: (err) => {
+            console.error(`Error loading stop times for trip ${trip.trip_id}`, err);
+            completedRequests++;
+
+            // Even if some requests fail, still show what we have
+            if (completedRequests === trips.length) {
+              this.tripStops = allStopTimes;
+              this.loading.timetable = false;
+            }
+          }
+        });
+    });
   }
 
   loadTripStopTimes() {
@@ -231,17 +267,17 @@ export class DashboardComponent {
   //       this.loading.vehicles = false;
   //     }
   //   });
-  
+
   //   this.loadVehicles();
-  
+
   //   this.subscriptions.push(pollSub);
   // }
-  
+
   // Separate method for loading vehicles
   loadVehicles() {
     this.loading.vehicles = true;
     this.gtfsService.getLatestVehiclePositions(
-      this.selectedAgency, 
+      this.selectedAgency,
       this.selectedCategory
     ).subscribe({
       next: (vehicles) => {
@@ -268,7 +304,7 @@ export class DashboardComponent {
     this.nearestTransports = [];
 
     // Get nearby stops
-    this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, '', 50)
+    this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, '', 5000)
       .subscribe({
         next: (stops) => {
           // Calculate distances and sort

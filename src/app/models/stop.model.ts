@@ -16,6 +16,7 @@ export interface StopMarker {
 }
 
 export interface TripStop {
+    trip_id: string;  
     stop_sequence: number;
     stop_id: string;
     stop_name: string;
