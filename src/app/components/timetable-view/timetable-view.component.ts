@@ -185,7 +185,13 @@ export class TimetableViewComponent {
     if (stops.length < 2) return '--';
 
     const firstTime = this.timeToMinutes(stops[0].arrival_time);
-    const lastTime = this.timeToMinutes(stops[stops.length - 1].arrival_time);
+    let lastTime = this.timeToMinutes(stops[stops.length - 1].arrival_time);
+
+    // Handle overnight trips (if last time is less than first time, it means we crossed midnight)
+    if (lastTime < firstTime) {
+      lastTime += 24 * 60; // Add 24 hours
+    }
+
     const diff = lastTime - firstTime;
 
     if (diff < 60) return `${diff}m`;
@@ -197,6 +203,12 @@ export class TimetableViewComponent {
   private timeToMinutes(time: string): number {
     if (!time) return 0;
     const [hours, minutes] = time.split(':').map(Number);
-    return (hours % 24) * 60 + (minutes || 0);
+
+    // Handle times like 24:30, 25:00, etc. (next day times)
+    if (hours >= 24) {
+      return (hours - 24) * 60 + (minutes || 0);
+    }
+
+    return hours * 60 + (minutes || 0);
   }
 }

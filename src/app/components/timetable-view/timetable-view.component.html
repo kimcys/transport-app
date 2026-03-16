@@ -73,7 +73,7 @@
                             <!-- Destination - FIXED: Use getStopName() -->
                             <div>
                                 <div class="text-sm text-gray-600">
-                                    {{ getStopName(trip.lastStop?.stop_id || '') }}
+                                    {{ getStopName(trip.lastStop?.stop_id || '') |titlecase}}
                                 </div>
                                 <div class="text-[10px] text-gray-300 mt-0.5">
                                     {{ trip.stops.length }} stops
@@ -122,7 +122,7 @@
                                         <div class="flex items-start justify-between">
                                             <div>
                                                 <div class="text-xs font-medium text-gray-700">
-                                                    {{ getStopName(stop.stop_id) }}
+                                                    {{ getStopName(stop.stop_id) | titlecase }}
                                                 </div>
                                                 <div class="flex items-center space-x-2 mt-0.5">
                                                     <span class="text-[8px] text-gray-300">
@@ -135,21 +135,6 @@
                                                         📍 Map
                                                     </button>
                                                 </div>
-                                            </div>
-
-                                            <!-- Expand coordinates button -->
-                                            <button (click)="toggleStop(trip.trip_id, i); $event.stopPropagation()"
-                                                class="text-[8px] text-gray-200 hover:text-gray-300 transition-colors">
-                                                {{ isStopExpanded(trip.trip_id, i) ? '−' : '+' }}
-                                            </button>
-                                        </div>
-
-                                        <!-- Expanded coordinates -->
-                                        <div *ngIf="isStopExpanded(trip.trip_id, i)"
-                                            class="mt-2 p-2 bg-white rounded-lg border border-gray-50">
-                                            <div class="text-[9px] font-mono text-gray-400">
-                                                <div>lat: {{ stop.stop_lat?.toFixed(6) }}</div>
-                                                <div>lng: {{ stop.stop_lon?.toFixed(6) }}</div>
                                             </div>
                                         </div>
                                     </div>
