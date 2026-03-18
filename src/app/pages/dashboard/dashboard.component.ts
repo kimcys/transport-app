@@ -301,6 +301,11 @@ export class DashboardComponent {
 
   // Separate method for loading vehicles
   loadVehicles() {
+    if (!this.selectedAgency) {
+      this.vehicles = [];
+      return;
+    }
+
     this.loading.vehicles = true;
     if (this.vehiclesSub) this.vehiclesSub.unsubscribe();
 

@@ -85,13 +85,17 @@ export class TransportMapComponent implements OnChanges {
     }
   }
   updateStopMarkers() {
+    const stationIconSvg = '/icons/gps.png';
+
     this.stopMarkers = this.stops.map((stop, index) => ({
       id: `stop-${stop.stop_id}-${index}`,
       position: { lat: stop.stop_lat, lng: stop.stop_lon },
       title: stop.stop_name,
       options: {
         icon: {
-          url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+          url: stationIconSvg,
+          scaledSize: new google.maps.Size(24, 24),
+          anchor: new google.maps.Point(12, 12)
         },
         zIndex: 50
       },
@@ -136,13 +140,13 @@ export class TransportMapComponent implements OnChanges {
   onMarkerClick(markerRef: MapMarker, markerData: MapMarkerData) {
     const data = markerData.data;
     this.selectedMarker = data;
-  
+
     if (data.route_id) {
       // Vehicle marker info window
       const speedClass = data.speed === 0 ? 'text-amber-600' : 'text-emerald-600';
       const speedIcon = data.speed === 0 ? '●' : '▶';
       const isMoving = data.speed > 0;
-      
+
       this.selectedInfo = `
         <div class="overflow-hidden rounded-lg bg-white shadow-lg">
           <!-- Header with route and vehicle -->
@@ -248,33 +252,33 @@ export class TransportMapComponent implements OnChanges {
         </div>
       `;
     }
-  
+
     this.markerClick.emit(data);
     this.infoWindow.open(markerRef);
   }
-  
+
   // Helper method to convert bearing to direction
   private getBearingDirection(bearing: number): string {
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
     const index = Math.round(bearing / 22.5) % 16;
     return directions[index];
   }
-  
+
   // Helper method to format time ago
   private getTimeAgo(timestamp: string): string {
     const now = new Date();
     const past = new Date(timestamp);
     const diffMs = now.getTime() - past.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'just now';
     if (diffMins === 1) return '1 min ago';
     if (diffMins < 60) return `${diffMins} mins ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours === 1) return '1 hour ago';
     if (diffHours < 24) return `${diffHours} hours ago`;
-    
+
     return past.toLocaleDateString();
   }
 
@@ -322,12 +326,12 @@ export class TransportMapComponent implements OnChanges {
 
   updateVehicleMarkers() {
     this.vehicleMarkers = this.vehicles.map((vehicle, index) => {
-  
+
       const color = this.agencyColor(
         vehicle.feed_agency,
         vehicle.feed_category
       );
-  
+
       return {
         id: `vehicle-${vehicle.vehicle_id}-${index}`,
         position: { lat: vehicle.lat, lng: vehicle.lon },
