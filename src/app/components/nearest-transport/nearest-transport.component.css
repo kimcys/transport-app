@@ -1,0 +1,100 @@
+/* nearest-transport.component.css */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Stagger animation for list items */
+.transport-item {
+  animation: slideIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.transport-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.transport-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.transport-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.transport-item:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.transport-item:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* Smooth transitions */
+.transition-colors {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover effects */
+.group:hover .group-hover\:text-gray-900 {
+  color: #111827;
+}
+
+/* Live indicator animation */
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
