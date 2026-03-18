@@ -1,71 +1,183 @@
-<div class="bg-white rounded-lg shadow p-4">
-    <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-semibold flex items-center">
-            <span class="mr-2">🚌</span> Live Vehicles
-        </h2>
+<!-- live-vehicle-list.component.html -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Header with gradient accent -->
+    <div class="px-5 py-4 border-b border-gray-50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div
+                    class="w-8 h-8 bg-linear-to-br from-green-50 to-emerald-50 rounded-xl flex items-center justify-center">
+                    <span class="text-lg">🚌</span>
+                </div>
+                <div>
+                    <h2 class="text-sm font-medium text-gray-900">
+                        Live Vehicles
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        {{ vehicles.length }} active vehicles
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live indicator -->
+        <div class="flex items-center mt-3 text-xs">
+            <span class="relative flex h-2 w-2 mr-2">
+                <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span class="text-gray-400">Live tracking</span>
+        </div>
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-8 h-[200px] flex justify-center items-center flex-col">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-        <p class="text-sm text-gray-500 mt-2">Fetching live data...</p>
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-16">
+        <div class="relative">
+            <div class="w-10 h-10 border-2 border-gray-100 border-t-green-400 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xs text-green-400">🚌</span>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-4 animate-pulse">Fetching live vehicles...</p>
     </div>
 
     <!-- Empty State -->
     <div *ngIf="!loading && vehicles.length === 0"
-        class="text-center py-8 h-[200px] flex justify-center items-center flex-col">
-        <div class="text-4xl mb-2">🚎</div>
-        <p class="text-gray-500">No active vehicles</p>
-        <p class="text-xs text-gray-400 mt-1">Try selecting a different agency</p>
+        class="flex flex-col items-center justify-center py-16 px-5 max-h-[200px]">
+        <div class="relative mb-4">
+            <div class="text-6xl mb-2 opacity-30 animate-float">🚎</div>
+            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-100 rounded-full"></div>
+        </div>
+        <h3 class="text-sm font-medium text-gray-700 mb-1">No Active Vehicles</h3>
+        <p class="text-xs text-gray-400 text-center max-w-[200px]">
+            No vehicles are currently active for this route
+        </p>
+        <button (click)="refresh.emit()"
+            class="mt-4 text-xs px-3 py-1.5 bg-gray-50 text-gray-500 rounded-lg hover:bg-gray-100 transition-colors">
+            Try refreshing
+        </button>
     </div>
 
     <!-- Vehicle List -->
-    <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-        <div *ngFor="let vehicle of vehicles" class="border rounded p-3 hover:bg-gray-50 cursor-pointer transition-all"
+    <div *ngIf="!loading && vehicles.length > 0" class="divide-y divide-gray-50 max-h-[200px] overflow-y-auto">
+
+        <div *ngFor="let vehicle of vehicles; trackBy: trackByVehicleId"
+            class="px-5 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer group"
             (click)="onVehicleClick(vehicle)">
 
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="font-medium text-lg">{{ vehicle.route_id }}</span>
-                    <span class="text-xs text-gray-500 ml-2">#{{ vehicle.vehicle_id | slice:-4 }}</span>
+            <!-- Top Row: Route and Vehicle ID -->
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <!-- Route badge with dynamic color -->
+                    <span
+                        class="text-xs font-medium px-2 py-1 bg-linear-to-br from-blue-50 to-indigo-50 text-blue-600 rounded-lg">
+                        {{ (vehicle.route_id) || '-' }}
+                    </span>
+                    <!-- Vehicle ID pill -->
+                    <span class="text-[10px] px-2 py-1 bg-gray-50 text-gray-500 rounded-lg">
+                        #{{ vehicle.vehicle_id | slice:-4 }}
+                    </span>
                 </div>
-                <span class="text-xs text-gray-500">
-                    {{ vehicle.observed_at | date:'HH:mm:ss' }}
-                </span>
+                <!-- Timestamp with icon -->
+                <div class="flex items-center space-x-1 text-[10px] text-gray-400">
+                    <span class="text-gray-300">🕒</span>
+                    <span>{{ vehicle.observed_at | date:'HH:mm:ss' }}</span>
+                </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mt-2 text-sm">
-                <div>
-                    <span class="text-gray-500">Speed:</span>
-                    <span class="ml-1 font-medium">{{ vehicle.speed }} km/h</span>
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <!-- Speed card -->
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[9px] text-gray-400 uppercase tracking-wider">Speed</span>
+                        <span class="text-xs" [class]="getVehicleStatus(vehicle).color">⚡</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <span class="text-sm font-semibold text-gray-700">{{ vehicle.speed }}</span>
+                        <span class="text-[8px] text-gray-400 mb-0.5">km/h</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-gray-500">Bearing:</span>
-                    <span class="ml-1 font-medium">{{ vehicle.bearing }}°</span>
+
+                <!-- Bearing card -->
+                <div class="bg-gray-50 rounded-xl p-2.5">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[9px] text-gray-400 uppercase tracking-wider">Bearing</span>
+                        <span class="text-xs text-gray-400">🧭</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <span class="text-sm font-semibold text-gray-700">{{ vehicle.bearing }}</span>
+                        <span class="text-[8px] text-gray-400 mb-0.5">deg</span>
+                    </div>
                 </div>
-                <div class="col-span-2">
-                    <span class="text-gray-500">Location:</span>
-                    <span class="ml-1 text-xs">
+            </div>
+
+            <!-- Location with map preview style -->
+            <div class="bg-linear-to-r from-gray-50 to-gray-50/30 rounded-xl p-2.5 mb-3">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] text-gray-400 uppercase tracking-wider">Location</span>
+                    <span class="text-[8px] text-gray-300">click to view on map</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-400 text-xs">📍</span>
+                    <span class="text-[11px] font-mono text-gray-600">
                         {{ vehicle.lat.toFixed(4) }}, {{ vehicle.lon.toFixed(4) }}
                     </span>
                 </div>
             </div>
 
-            <div class="mt-2 flex justify-between items-center">
-                <span class="text-xs px-2 py-1 rounded-full"
-                    [class.bg-green-100]="getVehicleStatus(vehicle).text === 'Moving'"
-                    [class.bg-yellow-100]="getVehicleStatus(vehicle).text === 'Moving Slow'"
-                    [class.bg-orange-100]="getVehicleStatus(vehicle).text === 'Stopped'"
-                    [class]="getVehicleStatus(vehicle).color">
-                    {{ getVehicleStatus(vehicle).text }}
-                </span>
-                <span class="text-xs text-gray-400">{{ vehicle.trip_id | slice:0:15 }}...</span>
+            <!-- Bottom Row: Status and Trip ID -->
+            <div class="flex items-center justify-between">
+                <!-- Status badge with dynamic colors -->
+                <div class="flex items-center space-x-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                            [class.bg-green-400]="getVehicleStatus(vehicle).text === 'Moving'"
+                            [class.bg-yellow-400]="getVehicleStatus(vehicle).text === 'Moving Slow'"
+                            [class.bg-orange-400]="getVehicleStatus(vehicle).text === 'Stopped'"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2"
+                            [class.bg-green-500]="getVehicleStatus(vehicle).text === 'Moving'"
+                            [class.bg-yellow-500]="getVehicleStatus(vehicle).text === 'Moving Slow'"
+                            [class.bg-orange-500]="getVehicleStatus(vehicle).text === 'Stopped'"></span>
+                    </span>
+                    <span class="text-[10px] font-medium" [class]="getVehicleStatus(vehicle).color">
+                        {{ getVehicleStatus(vehicle).text }}
+                    </span>
+                </div>
+
+                <!-- Trip ID with tooltip style -->
+                <div class="flex items-center space-x-1 group relative">
+                    <span class="text-[9px] text-gray-300">🚏</span>
+                    <span class="text-[9px] text-gray-400 truncate max-w-[100px]" [title]="vehicle.trip_id">
+                        {{ vehicle.trip_id | slice:0:15 }}...
+                    </span>
+                    <!-- Tooltip on hover -->
+                    <div
+                        class="absolute bottom-full right-0 mb-1 hidden group-hover:block bg-gray-800 text-white text-[8px] rounded px-2 py-1 whitespace-nowrap z-10">
+                        {{ vehicle.trip_id }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hover effect indicator -->
+            <div
+                class="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-gray-300 text-sm">→</span>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <div class="mt-3 text-xs text-gray-400 text-center border-t pt-2">
-        Showing {{ vehicles.length }} active vehicles • Updates every 30s
+    <!-- Footer with stats -->
+    <div *ngIf="!loading && vehicles.length > 0"
+        class="px-5 py-3 border-t border-gray-50 text-[8px] text-gray-300 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <span class="w-1 h-1 bg-green-500 rounded-full"></span>
+            <span>Last updated: {{ vehicles[0].observed_at | date:'HH:mm:ss' }}</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center"><span class="w-1 h-1 bg-green-500 rounded-full mr-1"></span>Moving</span>
+            <span class="flex items-center"><span class="w-1 h-1 bg-yellow-500 rounded-full mr-1"></span>Slow</span>
+            <span class="flex items-center"><span class="w-1 h-1 bg-orange-500 rounded-full mr-1"></span>Stopped</span>
+        </div>
     </div>
 </div>
