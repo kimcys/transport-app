@@ -70,6 +70,13 @@ export class DashboardComponent {
   lastUpdated = new Date();
 
   private subscriptions: Subscription[] = [];
+  private routesSub?: Subscription;
+  private stopsSub?: Subscription;
+  private vehiclesSub?: Subscription;
+  private nearestSub?: Subscription;
+  private timetableSub?: Subscription;
+  private tripStopsSub?: Subscription;
+  private stopTimesSubs: Subscription[] = [];
 
   constructor(
     private gtfsService: GtfsService,
@@ -122,21 +129,26 @@ export class DashboardComponent {
     this.selectedRoute = null;
     this.showTimetable = false;
 
+    this.routes = [];
+    this.stops = [];
+    this.vehicles = [];
+    this.nearestTransports = [];
+
     if (agency) {
       this.loadRoutes();
       this.loadStops();
       this.loadVehicles(); // Add this
       this.findNearestTransport();
-    } else {
-      this.routes = [];
-      this.stops = [];
-      this.vehicles = []; // Clear vehicles
-      this.nearestTransports = [];
     }
   }
 
   onCategoryChange(category: string) {
     this.selectedCategory = category;
+    this.routes = [];
+    this.stops = [];
+    this.vehicles = [];
+    this.nearestTransports = [];
+    
     this.loadRoutes();
     this.loadStops();
     this.loadVehicles(); // Add this
@@ -147,7 +159,9 @@ export class DashboardComponent {
     if (!this.selectedAgency) return;
 
     this.loading.routes = true;
-    this.gtfsService.getRoutes(this.selectedAgency, this.selectedCategory).subscribe({
+    if (this.routesSub) this.routesSub.unsubscribe();
+
+    this.routesSub = this.gtfsService.getRoutes(this.selectedAgency, this.selectedCategory).subscribe({
       next: (routes) => {
         this.routes = routes;
         this.loading.routes = false;
@@ -163,7 +177,9 @@ export class DashboardComponent {
     if (!this.selectedAgency) return;
 
     this.loading.stops = true;
-    this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, query).subscribe({
+    if (this.stopsSub) this.stopsSub.unsubscribe();
+
+    this.stopsSub = this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, query).subscribe({
       next: (stops) => {
         this.stops = stops;
         this.loading.stops = false;
@@ -180,7 +196,12 @@ export class DashboardComponent {
     this.showTimetable = true;
     this.loading.timetable = true;
 
-    this.gtfsService.getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
+    if (this.timetableSub) this.timetableSub.unsubscribe();
+    // Clear stop times subs as well when selecting a new route
+    this.stopTimesSubs.forEach(s => s.unsubscribe());
+    this.stopTimesSubs = [];
+
+    this.timetableSub = this.gtfsService.getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
       .subscribe({
         next: (trips) => {
           this.trips = trips;
@@ -203,8 +224,11 @@ export class DashboardComponent {
     let completedRequests = 0;
     const allStopTimes: TripStop[] = [];
 
+    this.stopTimesSubs.forEach(s => s.unsubscribe());
+    this.stopTimesSubs = [];
+
     trips.forEach(trip => {
-      this.gtfsService.getStopTimesForTrip(this.selectedAgency, trip.trip_id)
+      const sub = this.gtfsService.getStopTimesForTrip(this.selectedAgency, trip.trip_id)
         .subscribe({
           next: (stops) => {
             allStopTimes.push(...stops);
@@ -227,13 +251,15 @@ export class DashboardComponent {
             }
           }
         });
+      this.stopTimesSubs.push(sub);
     });
   }
 
   loadTripStopTimes() {
     if (!this.selectedTripId) return;
 
-    this.gtfsService.getStopTimesForTrip(this.selectedAgency, this.selectedTripId)
+    if (this.tripStopsSub) this.tripStopsSub.unsubscribe();
+    this.tripStopsSub = this.gtfsService.getStopTimesForTrip(this.selectedAgency, this.selectedTripId)
       .subscribe({
         next: (stops) => {
           this.tripStops = stops;
@@ -276,7 +302,9 @@ export class DashboardComponent {
   // Separate method for loading vehicles
   loadVehicles() {
     this.loading.vehicles = true;
-    this.gtfsService.getLatestVehiclePositions(
+    if (this.vehiclesSub) this.vehiclesSub.unsubscribe();
+
+    this.vehiclesSub = this.gtfsService.getLatestVehiclePositions(
       this.selectedAgency,
       this.selectedCategory
     ).subscribe({
@@ -302,9 +330,10 @@ export class DashboardComponent {
 
     this.loading.nearest = true;
     this.nearestTransports = [];
+    if (this.nearestSub) this.nearestSub.unsubscribe();
 
     // Get nearby stops
-    this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, '', 5000)
+    this.nearestSub = this.gtfsService.getStops(this.selectedAgency, this.selectedCategory, '', 5000)
       .subscribe({
         next: (stops) => {
           // Calculate distances and sort

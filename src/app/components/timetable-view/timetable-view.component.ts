@@ -35,6 +35,9 @@ export class TimetableViewComponent {
   // Track which stop is expanded in each trip
   expandedStops: Map<string, number> = new Map();
 
+  // O(1) Stop Name Lookup
+  stopsMap: Map<string, string> = new Map();
+
   get totalTrips(): number {
     return this.tripsWithStops.length;
   }
@@ -44,6 +47,11 @@ export class TimetableViewComponent {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['stops']) {
+      this.stopsMap.clear();
+      this.stops.forEach(s => this.stopsMap.set(s.stop_id, s.stop_name));
+    }
+
     if (changes['stopTimes'] || changes['trips']) {
       this.processTrips();
     }
@@ -168,10 +176,14 @@ export class TimetableViewComponent {
     return time.substring(0, 5);
   }
 
-  // Update this method to use the stops data
-  getStopName(stopId: string): string {
-    const stop = this.stops.find(s => s.stop_id === stopId);
-    return stop?.stop_name || stopId;
+  // Update this method to use the stopsMap for O(1) lookup
+  getStopName(stop: TripStop | null | undefined): string {
+    if (!stop) return '';
+    // Prefer the explicitly provided stop_name if the backend supports it
+    if (stop.stop_name) return stop.stop_name;
+    
+    // Fallback to the O(1) map we built from the stops array
+    return this.stopsMap.get(stop.stop_id) || stop.stop_id;
   }
 
   onStopClick(lat?: number, lng?: number, event?: Event) {

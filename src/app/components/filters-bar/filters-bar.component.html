@@ -20,7 +20,7 @@
                 Agency <span class="text-red-400 ml-0.5">*</span>
             </label>
             <div class="relative">
-                <select [(ngModel)]="selectedAgency" (change)="onAgencySelect()"
+                <select [(ngModel)]="selectedAgency" (ngModelChange)="onAgencySelect()"
                     class="w-full appearance-none bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 hover:border-gray-300">
                     <option value="" class="text-gray-400">Select agency</option>
                     <option *ngFor="let agency of agencies" [value]="agency" class="text-gray-700">
@@ -48,7 +48,7 @@
                 Category
             </label>
             <div class="relative">
-                <select [(ngModel)]="selectedCategory" (change)="onCategorySelect()" [disabled]="!selectedAgency"
+                <select [(ngModel)]="selectedCategory" (ngModelChange)="onCategorySelect()" [disabled]="!selectedAgency"
                     class="w-full appearance-none bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed">
                     <option value="" class="text-gray-500">All Categories</option>
                     <option *ngFor="let category of categories" [value]="category" class="text-gray-700">
@@ -76,7 +76,7 @@
                 Route
             </label>
             <div class="relative">
-                <select [(ngModel)]="selectedRoute" (change)="onRouteSelect()" [disabled]="!selectedAgency || loading"
+                <select [(ngModel)]="selectedRoute" (ngModelChange)="onRouteSelect()" [disabled]="!selectedAgency || loading"
                     class="w-full appearance-none bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed">
                     <option [ngValue]="null" class="text-gray-500">Select route</option>
                     <option *ngFor="let route of routes" [ngValue]="route" class="text-gray-700">

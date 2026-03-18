@@ -61,7 +61,7 @@
                         <div class="flex flex-row gap-1 items-center">
                             <!-- Origin -->
                             <div class="text-xs text-gray-600 truncate">
-                                {{ getStopName(trip.firstStop?.stop_id || '') | titlecase }}
+                                {{ getStopName(trip.firstStop) | titlecase }}
                             </div>
 
                             <!-- Arrow -->
@@ -71,7 +71,7 @@
 
                             <!-- Destination -->
                             <div class="text-xs text-gray-600 truncate">
-                                {{ getStopName(trip.lastStop?.stop_id || '') | titlecase }}
+                                {{ getStopName(trip.lastStop) | titlecase }}
                             </div>
                         </div>
 
@@ -91,7 +91,7 @@
                             class="border-t border-gray-50 bg-gray-50/30 px-3 py-2 text-[10px] max-h-40 overflow-y-auto">
                             <div *ngFor="let stop of trip.stops; let i = index" class="flex items-start py-0.5 group">
                                 <span class="text-gray-400 w-9">{{ formatTime(stop.arrival_time) }}</span>
-                                <span class="text-gray-600 truncate flex-1">{{ getStopName(stop.stop_id) | titlecase
+                                <span class="text-gray-600 truncate flex-1">{{ getStopName(stop) | titlecase
                                     }}</span>
                                 <button *ngIf="stop.stop_lat && stop.stop_lon"
                                     (click)="onStopClick(stop.stop_lat, stop.stop_lon, $event)"
