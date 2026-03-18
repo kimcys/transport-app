@@ -1,7 +1,8 @@
 /* Add to your global styles or component styles */
 .info-window-content {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
 }
 
 /* Ensure smooth shadows and transitions */
@@ -10,7 +11,8 @@
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05),
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05),
     0 8px 10px -6px rgba(0, 0, 0, 0.02);
 }
 
@@ -18,7 +20,8 @@
 ::ng-deep .gm-style-iw {
   padding: 0 !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;
 }
 
@@ -35,4 +38,105 @@
 
 ::ng-deep .gm-ui-hover-effect:hover {
   opacity: 1 !important;
+}
+
+/* transport-map.component.css */
+
+/* Geofence pulse animation */
+@keyframes geofencePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.3);
+    border-color: rgba(33, 150, 243, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(33, 150, 243, 0);
+    border-color: rgba(33, 150, 243, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+    border-color: rgba(33, 150, 243, 0.4);
+  }
+}
+
+.geofence-pulse {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 2px solid rgba(33, 150, 243, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: geofencePulse 2s infinite;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+/* Optional: Add a second pulse with delay */
+.geofence-pulse::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid rgba(33, 150, 243, 0.2);
+  border-radius: 50%;
+  animation: geofencePulse 2s infinite 1s;
+}
+
+/* Backdrop blur for overlays */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar if needed */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* Info window custom styles */
+::ng-deep .gm-style-iw {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+::ng-deep .gm-style-iw-d {
+  overflow: hidden !important;
+  max-width: 300px !important;
+}
+
+::ng-deep .gm-ui-hover-effect {
+  top: 8px !important;
+  right: 8px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+::ng-deep .gm-ui-hover-effect img {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 4px !important;
 }
