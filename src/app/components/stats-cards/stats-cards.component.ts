@@ -3,11 +3,12 @@ import { VehiclePosition } from '../../models/vehicle.model';
 import { Route } from '../../models/route.model';
 import { NearestTransport } from '../../models/trip.model';
 import { CommonModule } from '@angular/common';
+import { NamePipe } from '../../pipes/name.pipe';
 
 @Component({
   selector: 'app-stats-cards',
   templateUrl: './stats-cards.component.html',
-  imports: [CommonModule]
+  imports: [CommonModule, NamePipe]
 })
 export class StatsCardsComponent {
   @Input() vehicles: VehiclePosition[] = [];
