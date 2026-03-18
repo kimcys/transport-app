@@ -27,25 +27,31 @@
     </app-stats-cards>
 
     <!-- Main Grid: Map + Sidebar -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <!-- Live Vehicles List Component -->
-      <app-live-vehicle-list [vehicles]="vehicles" [loading]="loading.vehicles"
-        (selectVehicle)="onSelectMapLocation($event)" (refresh)="refreshVehicles()">
-      </app-live-vehicle-list>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="flex flex-col gap-6">
+        <div class="h-1/2">
+          <!-- Live Vehicles List Component -->
+          <app-live-vehicle-list [vehicles]="vehicles" [loading]="loading.vehicles"
+            (selectVehicle)="onSelectMapLocation($event)" (refresh)="refreshVehicles()">
+          </app-live-vehicle-list>
+        </div>
+        <div class="h-1/2">
+          <!-- Nearest Transport Component -->
+          <app-nearest-transport [transports]="nearestTransports" [userLocation]="userLocation"
+            [loading]="loading.nearest" (selectStop)="onSelectMapLocation($event)">
+          </app-nearest-transport>
+        </div>
+      </div>
       <!-- Map Column (2/3 width) -->
-      <div class="lg:col-span-3">
+      <div class="lg:col-span-2">
         <app-transport-map [vehicles]="vehicles" [stops]="stops" [userLocation]="userLocation" [center]="mapCenter"
           [zoom]="mapZoom" (centerChange)="onMapCenterChange($event)" (markerClick)="onMarkerClick($event)">
         </app-transport-map>
       </div>
-      <!-- Nearest Transport Component -->
-      <app-nearest-transport [transports]="nearestTransports" [userLocation]="userLocation" [loading]="loading.nearest"
-        (selectStop)="onSelectMapLocation($event)">
-      </app-nearest-transport>
     </div>
 
     <!-- Timetable Modal/Section -->
-    <div *ngIf="showTimetable" class="mt-6">
+    <div>
       <app-timetable-view [stopTimes]="tripStops" [trips]="trips" [route]="selectedRoute" [loading]="loading.timetable"
         [stops]="stops" (selectStop)="onSelectMapLocation($event)" (close)="closeTimetable()">
       </app-timetable-view>

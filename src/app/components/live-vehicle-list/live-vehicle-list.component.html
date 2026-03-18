@@ -6,20 +6,21 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-8">
+    <div *ngIf="loading" class="text-center py-8 h-[200px] flex justify-center items-center flex-col">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
         <p class="text-sm text-gray-500 mt-2">Fetching live data...</p>
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!loading && vehicles.length === 0" class="text-center py-8">
+    <div *ngIf="!loading && vehicles.length === 0"
+        class="text-center py-8 h-[200px] flex justify-center items-center flex-col">
         <div class="text-4xl mb-2">🚎</div>
         <p class="text-gray-500">No active vehicles</p>
         <p class="text-xs text-gray-400 mt-1">Try selecting a different agency</p>
     </div>
 
     <!-- Vehicle List -->
-    <div class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+    <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
         <div *ngFor="let vehicle of vehicles" class="border rounded p-3 hover:bg-gray-50 cursor-pointer transition-all"
             (click)="onVehicleClick(vehicle)">
 

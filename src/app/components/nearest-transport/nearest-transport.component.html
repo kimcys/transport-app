@@ -10,14 +10,15 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!loading && transports.length === 0" class="text-center py-8">
+    <div *ngIf="!loading && transports.length === 0"
+        class="text-center py-8 h-[200px] flex justify-center items-center flex-col">
         <div class="text-4xl mb-2">🚏</div>
         <p class="text-gray-500">No nearby transport found</p>
         <p class="text-xs text-gray-400 mt-1">Try selecting an agency first</p>
     </div>
 
     <!-- Transport List -->
-    <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+    <div class="space-y-3 max-h-[200px] overflow-y-auto pr-2">
         <div *ngFor="let transport of transports; let i = index"
             class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-all hover:shadow-md"
             (click)="onStopClick(transport.stop.stop_lat, transport.stop.stop_lon)">
