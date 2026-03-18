@@ -10,7 +10,7 @@ export const routes: Routes = [
     {
         path: 'dashboard',
         component: DashboardComponent,
-        title: 'Real-Time Transport Dashboard'
+        title: 'LaluanMY'
     },
     {
         path: '**',
