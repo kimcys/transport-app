@@ -4,9 +4,8 @@
             width="100%" (mapInitialized)="onMapInit($event)">
 
             <!-- Geofence Circle (50km radius) -->
-            <map-circle *ngIf="center" [center]="center" [radius]="20000" [options]="geofenceOptions" />
-
-            <!-- Vehicle Markers (these will be clustered programmatically) -->
+            <map-circle *ngIf="center" [center]="center" [radius]="20000" [options]="geofenceOptions">
+            </map-circle> <!-- Vehicle Markers (these will be clustered programmatically) -->
             <map-marker *ngFor="let marker of vehicleMarkers; trackBy: trackByMarkerId" #m="mapMarker"
                 [position]="marker.position" [title]="marker.title" [options]="marker.options"
                 (mapClick)="onMarkerClick(m, marker)"></map-marker>
@@ -25,12 +24,6 @@
                 <div [innerHTML]="selectedInfo"></div>
             </map-info-window>
         </google-map>
-
-        <!-- Geofence Pulse Animation Overlay -->
-        <div class="absolute inset-0 pointer-events-none">
-            <div class="geofence-pulse" [style.left.%]="50" [style.top.%]="50"
-                [style.transform]="'translate(-50%, -50%)'"></div>
-        </div>
 
         <!-- Map Legend Overlay -->
         <div
