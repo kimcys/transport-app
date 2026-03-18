@@ -85,7 +85,7 @@ export class TransportMapComponent implements OnChanges {
     }
   }
   updateStopMarkers() {
-    const stationIconSvg = '/icons/gps.png';
+    const stationIconSvg = '/icons/gps.svg';
 
     this.stopMarkers = this.stops.map((stop, index) => ({
       id: `stop-${stop.stop_id}-${index}`,

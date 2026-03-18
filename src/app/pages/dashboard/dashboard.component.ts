@@ -148,10 +148,11 @@ export class DashboardComponent {
     this.stops = [];
     this.vehicles = [];
     this.nearestTransports = [];
-    
+
     this.loadRoutes();
     this.loadStops();
     this.loadVehicles(); // Add this
+    this.findNearestTransport();
   }
 
 
@@ -217,6 +218,9 @@ export class DashboardComponent {
           this.loading.timetable = false;
         }
       });
+
+    // Re-calculate nearest transport specifically for this route
+    this.findNearestTransport();
   }
 
   // New method to load stop times for all trips
@@ -331,7 +335,7 @@ export class DashboardComponent {
 
   // ============== NEAREST TRANSPORT ==============
   findNearestTransport() {
-    if (!this.userLocation || !this.selectedAgency || this.routes.length === 0) return;
+    if (!this.userLocation || !this.selectedAgency) return;
 
     this.loading.nearest = true;
     this.nearestTransports = [];
@@ -351,6 +355,7 @@ export class DashboardComponent {
               stop.stop_lon
             )
           }))
+            .filter(stop => stop.distance <= 50) // 50km geofence
             .sort((a, b) => a.distance - b.distance)
             .slice(0, 5); // Top 5
 
@@ -370,8 +375,10 @@ export class DashboardComponent {
 
   findRoutesForStop(stop: Stop & { distance: number }) {
     // Simplified - would need proper schedule calculation
-    if (this.routes.length > 0) {
-      const route = this.routes[0]; // Use first route for demo
+    const targetRoutes = this.selectedRoute ? [this.selectedRoute] : this.routes;
+
+    if (targetRoutes.length > 0) {
+      const route = targetRoutes[0]; // Use selected route or first route for demo
       const vehicle = this.vehicles.find(v => v.route_id === route.route_id);
 
       // Calculate next departure (simplified)
