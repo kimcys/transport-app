@@ -1,3 +1,4 @@
+<!-- filters-bar.component.html -->
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
     <!-- Header with improved typography -->
     <div class="flex justify-between items-center mb-5">
@@ -12,7 +13,7 @@
     </div>
 
     <!-- Filter grid with improved spacing -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Agency Dropdown - Minimalist -->
         <div class="space-y-1.5">
             <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -23,7 +24,7 @@
                     class="w-full appearance-none bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 hover:border-gray-300">
                     <option value="" class="text-gray-400">Select agency</option>
                     <option *ngFor="let agency of agencies" [value]="agency" class="text-gray-700">
-                        {{ agency }}
+                        {{ agency | name }}
                     </option>
                 </select>
                 <!-- Custom dropdown arrow -->
@@ -37,7 +38,7 @@
             <!-- Optional: Active indicator -->
             <div *ngIf="selectedAgency" class="text-[10px] text-green-600 flex items-center gap-1 mt-1">
                 <span class="w-1 h-1 bg-green-500 rounded-full"></span>
-                {{ selectedAgency }} selected
+                {{ selectedAgency | name }} selected
             </div>
         </div>
 
@@ -49,9 +50,9 @@
             <div class="relative">
                 <select [(ngModel)]="selectedCategory" (change)="onCategorySelect()" [disabled]="!selectedAgency"
                     class="w-full appearance-none bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed">
-                    <option value="" class="text-gray-500">All categories</option>
+                    <option value="" class="text-gray-500">All Categories</option>
                     <option *ngFor="let category of categories" [value]="category" class="text-gray-700">
-                        {{ category | titlecase }}
+                        {{ category | name }}
                     </option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
@@ -60,6 +61,12 @@
                             d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                     </svg>
                 </div>
+            </div>
+
+            <!-- Show All Categories hint -->
+            <div *ngIf="selectedAgency && categories.length === 0"
+                class="text-[10px] text-gray-400 flex items-center gap-1 mt-1">
+                <span>No categories available</span>
             </div>
         </div>
 
@@ -102,57 +109,22 @@
                 <span>{{ routes.length }} routes available</span>
             </div>
         </div>
-
-        <!-- Stop Search - Enhanced with modern input -->
-        <div class="space-y-1.5">
-            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Search stops
-            </label>
-            <div class="flex">
-                <div class="relative flex-1">
-                    <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearchStop()"
-                        [disabled]="!selectedAgency" placeholder="e.g., KL Sentral"
-                        class="w-full border border-r-0 border-gray-200 text-gray-700 text-sm rounded-l-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block px-3 py-2.5 transition-colors duration-200 disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400">
-                    <div *ngIf="searchQuery" class="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <button (click)="searchQuery = ''" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                                <path
-                                    d="M10 8.586L6.707 5.293a1 1 0 00-1.414 1.414L8.586 10l-3.293 3.293a1 1 0 101.414 1.414L10 11.414l3.293 3.293a1 1 0 001.414-1.414L11.414 10l3.293-3.293a1 1 0 00-1.414-1.414L10 8.586z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <button (click)="onSearchStop()" [disabled]="!selectedAgency || !searchQuery"
-                    class="px-4 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors duration-200 disabled:bg-gray-200 disabled:text-gray-400 flex items-center justify-center">
-                    <svg class="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Search hint -->
-            <div *ngIf="selectedAgency && !searchQuery" class="text-[10px] text-gray-400 flex items-center gap-1 mt-1">
-                <span>Type at least 2 characters</span>
-            </div>
-        </div>
     </div>
 
-    <!-- Active filters summary (optional) -->
-    <div *ngIf="selectedAgency || selectedCategory || selectedRoute || searchQuery"
+    <!-- Active filters summary -->
+    <div *ngIf="selectedAgency || (selectedCategory && selectedCategory !== '') || selectedRoute"
         class="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-gray-100">
         <span class="text-xs text-gray-400">Active filters:</span>
 
         <span *ngIf="selectedAgency"
             class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
-            {{ selectedAgency }}
+            {{ selectedAgency | name }}
             <button (click)="selectedAgency = ''; onAgencySelect()" class="hover:text-blue-900">×</button>
         </span>
 
-        <span *ngIf="selectedCategory"
+        <span *ngIf="selectedCategory && selectedCategory !== ''"
             class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
-            {{ selectedCategory }}
+            {{ selectedCategory | name }}
             <button (click)="selectedCategory = ''; onCategorySelect()" class="hover:text-gray-900">×</button>
         </span>
 
@@ -160,12 +132,6 @@
             class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
             {{ selectedRoute.route_short_name }}
             <button (click)="selectedRoute = null; onRouteSelect()" class="hover:text-gray-900">×</button>
-        </span>
-
-        <span *ngIf="searchQuery"
-            class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
-            "{{ searchQuery }}"
-            <button (click)="searchQuery = ''" class="hover:text-gray-900">×</button>
         </span>
     </div>
 </div>
