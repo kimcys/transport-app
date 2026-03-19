@@ -487,9 +487,51 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     return '#455A64';
   }
 
+  private vehicleIconType(agency: string, category?: string | null): 'bus' | 'feeder' | 'rail' | 'train' {
+    const normalizedAgency = agency?.toLowerCase() ?? '';
+    const normalizedCategory = category?.toLowerCase() ?? '';
+
+    if (normalizedAgency === 'ktmb') {
+      return 'train';
+    }
+
+    if (normalizedCategory.includes('rail') || normalizedCategory.includes('mrt') || normalizedCategory.includes('lrt') || normalizedCategory.includes('monorail')) {
+      return 'rail';
+    }
+
+    if (normalizedCategory.includes('feeder')) {
+      return 'feeder';
+    }
+
+    return 'bus';
+  }
+
+  private vehicleIconSvg(type: 'bus' | 'feeder' | 'rail' | 'train', color: string): string {
+    const busBody = `<rect x="12" y="14" width="24" height="16" rx="5" fill="${color}" /><rect x="16" y="18" width="16" height="6" rx="2" fill="white" opacity="0.95" /><circle cx="18" cy="32" r="3" fill="#1f2937" /><circle cx="30" cy="32" r="3" fill="#1f2937" />`;
+    const feederBody = `<rect x="11" y="13" width="26" height="18" rx="8" fill="${color}" /><rect x="16" y="18" width="16" height="6" rx="3" fill="white" opacity="0.95" /><circle cx="18" cy="32" r="3" fill="#1f2937" /><circle cx="30" cy="32" r="3" fill="#1f2937" /><path d="M24 8l2 4h-4l2-4z" fill="${color}" />`;
+    const railBody = `<rect x="11" y="11" width="26" height="22" rx="8" fill="${color}" /><rect x="16" y="16" width="16" height="8" rx="3" fill="white" opacity="0.95" /><path d="M17 34h14" stroke="#1f2937" stroke-width="2" stroke-linecap="round" /><path d="M20 37l-2 3M28 37l2 3" stroke="#1f2937" stroke-width="2" stroke-linecap="round" />`;
+    const trainBody = `<rect x="10" y="10" width="28" height="24" rx="6" fill="${color}" /><rect x="15" y="15" width="18" height="8" rx="2" fill="white" opacity="0.95" /><path d="M18 34h12" stroke="#1f2937" stroke-width="2" stroke-linecap="round" /><path d="M19 37l-2 3M29 37l2 3" stroke="#1f2937" stroke-width="2" stroke-linecap="round" /><path d="M24 6v6" stroke="${color}" stroke-width="3" stroke-linecap="round" />`;
+
+    const body = {
+      bus: busBody,
+      feeder: feederBody,
+      rail: railBody,
+      train: trainBody
+    }[type];
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+      <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="20" fill="white" opacity="0.96"/>
+        <circle cx="24" cy="24" r="19" fill="none" stroke="${color}" stroke-width="2"/>
+        ${body}
+      </svg>
+    `)}`;
+  }
+
   updateVehicleMarkers() {
     this.vehicleMarkers = this.vehicles.map((vehicle, index) => {
       const color = this.agencyColor(vehicle.feed_agency, vehicle.feed_category);
+      const iconType = this.vehicleIconType(vehicle.feed_agency, vehicle.feed_category);
 
       return {
         id: `vehicle-${vehicle.vehicle_id}-${index}`,
@@ -498,14 +540,9 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         title: `${vehicle.route_id || 'No Route'} - ${vehicle.vehicle_id}`,
         options: {
           icon: {
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            rotation: vehicle.bearing,
-            scale: 6,
-            fillColor: color,
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#FFFFFF',
-            anchor: new google.maps.Point(0, 3)
+            url: this.vehicleIconSvg(iconType, color),
+            scaledSize: new google.maps.Size(34, 34),
+            anchor: new google.maps.Point(17, 17)
           },
           zIndex: 100
         },
