@@ -49,6 +49,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   private pulseCircleRefs: google.maps.Circle[] = [];
   private pulseAnimationId: number | null = null;
   selectedMarkerData: MapMarkerData | null = null;
+  geofenceCenter: google.maps.LatLngLiteral | null = null;
 
   constructor(private ngZone: NgZone) { }
 
@@ -85,27 +86,28 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   vehicleMarkers: MapMarkerData[] = [];
   stopMarkers: MapMarkerData[] = [];
   userMarker: MapMarkerData | null = null;
-
-  selectedInfo = '';
   selectedMarker: any = null;
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['vehicles']) {
       this.updateVehicleMarkers();
     }
+
     if (changes['stops']) {
       this.updateStopMarkers();
     }
-    if (changes['userLocation'] && this.userLocation) {
+
+    if (changes['userLocation']) {
       this.updateUserMarker();
+
+      if (this.map && this.geofenceCenter) {
+        this.fitMapToGeofence();
+      }
     }
+
     if (changes['center'] && this.map) {
       if (changes['center'].currentValue !== changes['center'].previousValue) {
         this.panToLocation(this.center);
-
-        this.pulseCircleRefs.forEach(circle => {
-          circle.setCenter(this.center);
-        });
       }
     }
   }
@@ -140,7 +142,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
     this.ngZone.runOutsideAngular(() => {
       const animate = (time: number) => {
-        if (!this.map || !this.center || this.pulseCircleRefs.length === 0) {
+        if (!this.map || !this.geofenceCenter || this.pulseCircleRefs.length === 0) {
           this.pulseAnimationId = requestAnimationFrame(animate);
           return;
         }
@@ -153,7 +155,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
           const offset = i * (duration / 3);
           const progress = ((time + offset) % duration) / duration;
 
-          circle.setCenter(this.center);
+          circle.setCenter(this.geofenceCenter);
           circle.setRadius(baseRadius + progress * extraRadius);
           circle.setOptions({
             fillOpacity: 0.12 * (1 - progress),
@@ -169,14 +171,14 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   }
 
   private initPulseCircles() {
-    if (!this.map || !this.center) return;
+    if (!this.map || !this.geofenceCenter) return;
 
     this.clearPulseCircles();
 
     this.pulseCircleRefs = [0, 1, 2].map(() => {
       const circle = new google.maps.Circle({
         map: this.map!,
-        center: this.center,
+        center: this.geofenceCenter,
         radius: 2000,
         clickable: false,
         strokeColor: '#2196F3',
@@ -208,8 +210,14 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   onMapInit(map: google.maps.Map) {
     this.map = map;
     this.fitMapToGeofence();
-    this.initPulseCircles();
-    this.startPulse();
+
+    if (this.geofenceCenter) {
+      this.initPulseCircles();
+    }
+
+    if (this.pulseAnimationId === null) {
+      this.startPulse();
+    }
   }
 
   private setupClustering() {
@@ -274,17 +282,17 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   }
 
   private fitMapToGeofence() {
-    if (this.map && this.center) {
+    if (this.map && this.geofenceCenter) {
       const bounds = new google.maps.LatLngBounds();
-      bounds.extend(this.center);
+      bounds.extend(this.geofenceCenter);
 
       const latOffset = 0.18;
-      const lngOffset = 0.18 / Math.cos(this.center.lat * Math.PI / 180);
+      const lngOffset = 0.18 / Math.cos(this.geofenceCenter.lat * Math.PI / 180);
 
-      bounds.extend({ lat: this.center.lat + latOffset, lng: this.center.lng + lngOffset });
-      bounds.extend({ lat: this.center.lat - latOffset, lng: this.center.lng - lngOffset });
-      bounds.extend({ lat: this.center.lat + latOffset, lng: this.center.lng - lngOffset });
-      bounds.extend({ lat: this.center.lat - latOffset, lng: this.center.lng + lngOffset });
+      bounds.extend({ lat: this.geofenceCenter.lat + latOffset, lng: this.geofenceCenter.lng + lngOffset });
+      bounds.extend({ lat: this.geofenceCenter.lat - latOffset, lng: this.geofenceCenter.lng - lngOffset });
+      bounds.extend({ lat: this.geofenceCenter.lat + latOffset, lng: this.geofenceCenter.lng - lngOffset });
+      bounds.extend({ lat: this.geofenceCenter.lat - latOffset, lng: this.geofenceCenter.lng + lngOffset });
 
       this.map.fitBounds(bounds);
     }
@@ -314,10 +322,12 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
   updateUserMarker() {
     if (this.userLocation) {
+      const userPos = { lat: this.userLocation.lat, lng: this.userLocation.lng };
+
       this.userMarker = {
         id: 'user-location',
         type: 'user',
-        position: { lat: this.userLocation.lat, lng: this.userLocation.lng },
+        position: userPos,
         title: 'You are here',
         options: {
           icon: {
@@ -328,8 +338,16 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         },
         data: { type: 'user', location: this.userLocation }
       };
+
+      this.geofenceCenter = userPos;
+
+      if (this.map) {
+        this.initPulseCircles();
+      }
     } else {
       this.userMarker = null;
+      this.geofenceCenter = null;
+      this.clearPulseCircles();
     }
   }
 

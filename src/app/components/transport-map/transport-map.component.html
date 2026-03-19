@@ -4,8 +4,9 @@
             width="100%" (mapInitialized)="onMapInit($event)">
 
             <!-- Geofence Circle (50km radius) -->
-            <map-circle *ngIf="center" [center]="center" [radius]="1000" [options]="geofenceOptions">
-            </map-circle> <!-- Vehicle Markers (these will be clustered programmatically) -->
+            <map-circle *ngIf="geofenceCenter" [center]="geofenceCenter" [radius]="1000"
+                [options]="geofenceOptions"></map-circle>
+            <!-- Vehicle Markers (these will be clustered programmatically) -->
             <map-marker *ngFor="let marker of vehicleMarkers; trackBy: trackByMarkerId" #m="mapMarker"
                 [position]="marker.position" [title]="marker.title" [options]="marker.options"
                 (mapClick)="onMarkerClick(m, marker)"></map-marker>
