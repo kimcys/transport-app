@@ -1,145 +1,217 @@
-<section class="planner-shell">
-  <div class="planner-header">
-    <div>
-      <p class="eyebrow">Trip Planner</p>
-      <h2>Google search to destination routing</h2>
-    </div>
-    <p class="planner-note">Search any address, landmark, station, or stop and get Google transit routes with the vehicle used on each leg.</p>
-  </div>
+<section class="relative overflow-visible">
+  <!-- Main Planner Card - Minimalist Design -->
+  <div class="relative overflow-visible bg-white rounded-2xl shadow-sm border border-gray-100/80 h-full">
 
-  <div class="planner-controls">
-    <div class="mode-toggle">
-      <button type="button" [class.active]="originMode === 'current-location'" (click)="setOriginMode('current-location')">
-        From current location
-      </button>
-      <button type="button" [class.active]="originMode === 'search'" (click)="setOriginMode('search')">
-        Search origin
-      </button>
+    <!-- Header Section - Clean and Simple -->
+    <div class="px-6 sm:px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Trip Planner</p>
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mt-1 tracking-tight">Plan your journey</h2>
+        </div>
+        <div class="hidden sm:block">
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-500 rounded-full text-xs border border-gray-100">
+            <span class="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+            Google Maps
+          </span>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">
+        Search any address, landmark, or station to get transit routes with vehicle details.
+      </p>
     </div>
 
-    <div class="form-grid">
-      <div *ngIf="originMode === 'search'" class="field">
-        <label for="origin-stop">From</label>
-        <input id="origin-stop" type="text" [(ngModel)]="originQuery" (ngModelChange)="onOriginQueryChange()"
-          placeholder="Search origin with Google" />
-        <div class="suggestions" *ngIf="originSuggestions.length > 0">
-          <button type="button" *ngFor="let suggestion of originSuggestions" (click)="chooseOriginSuggestion(suggestion)">
-            <span>{{ suggestion.label }}</span>
-            <small>{{ suggestion.secondaryText }}</small>
+    <!-- Controls Section - Minimal Spacing -->
+    <div class="p-6 sm:p-8 space-y-6">
+      <!-- Mode Toggle - Simple Pill Design -->
+      <div class="flex gap-2">
+        <button type="button" (click)="setOriginMode('current-location')"
+          class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200" [class]="originMode === 'current-location' 
+            ? 'bg-gray-900 text-white shadow-sm' 
+            : 'bg-gray-50 text-gray-600 hover:bg-gray-100'">
+          <span class="flex items-center gap-1.5">
+            <span class="text-base">📍</span>
+            Current location
+          </span>
+        </button>
+        <button type="button" (click)="setOriginMode('search')"
+          class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200" [class]="originMode === 'search'
+            ? 'bg-gray-900 text-white shadow-sm'
+            : 'bg-gray-50 text-gray-600 hover:bg-gray-100'">
+          <span class="flex items-center gap-1.5">
+            <span class="text-base">🔍</span>
+            Search origin
+          </span>
+        </button>
+      </div>
+
+      <!-- Search Form - Clean Input Design -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 overflow-visible">
+        <!-- Origin Field -->
+        <div *ngIf="originMode === 'search'" class="lg:col-span-1 overflow-visible">
+          <div class="relative overflow-visible">
+            <input type="text" [(ngModel)]="originQuery" (ngModelChange)="onOriginQueryChange()"
+              placeholder="From where?"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-gray-300 focus:ring-0 transition-all duration-200 outline-none placeholder:text-gray-400" />
+            <!-- Suggestions Dropdown -->
+            <div *ngIf="originSuggestions.length > 0"
+              class="absolute left-0 right-0 top-full z-[100] mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+              <div class="max-h-[min(20rem,calc(100vh-12rem))] overflow-y-auto divide-y divide-gray-50">
+                <button *ngFor="let suggestion of originSuggestions" (click)="chooseOriginSuggestion(suggestion)"
+                  class="w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150">
+                  <div class="text-sm font-medium text-gray-700">{{ suggestion.label }}</div>
+                  <div class="text-xs text-gray-400 mt-0.5">{{ suggestion.secondaryText }}</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destination Field -->
+        <div [class]="originMode === 'search' ? 'lg:col-span-1 overflow-visible' : 'lg:col-span-2 overflow-visible'">
+          <div class="relative  overflow-visible">
+            <input type="text" [(ngModel)]="destinationQuery" (ngModelChange)="onDestinationQueryChange()"
+              placeholder="Where to?"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-gray-300 focus:ring-0 transition-all duration-200 outline-none placeholder:text-gray-400" />
+            <!-- Suggestions Dropdown -->
+            <div *ngIf="destinationSuggestions.length > 0"
+              class="absolute left-0 right-0 top-full z-[100] mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+              <div class="max-h-[min(20rem,calc(100vh-12rem))] overflow-y-auto divide-y divide-gray-50">
+                <button *ngFor="let suggestion of destinationSuggestions"
+                  (click)="chooseDestinationSuggestion(suggestion)"
+                  class="w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150">
+                  <div class="text-sm font-medium text-gray-700">{{ suggestion.label }}</div>
+                  <div class="text-xs text-gray-400 mt-0.5">{{ suggestion.secondaryText }}</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button - Minimal Design -->
+        <div class="flex items-end">
+          <button type="button" [disabled]="!canPlanTrip() || loading" (click)="planTrip()"
+            class="w-full px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+            <span class="flex items-center justify-center gap-2">
+              <span *ngIf="loading"
+                class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {{ loading ? 'Planning...' : 'Plan trip' }}
+            </span>
           </button>
         </div>
       </div>
 
-      <div class="field">
-        <label for="destination-stop">To</label>
-        <input id="destination-stop" type="text" [(ngModel)]="destinationQuery" (ngModelChange)="onDestinationQueryChange()"
-          placeholder="Search destination with Google" />
-        <div class="suggestions" *ngIf="destinationSuggestions.length > 0">
-          <button type="button" *ngFor="let suggestion of destinationSuggestions" (click)="chooseDestinationSuggestion(suggestion)">
-            <span>{{ suggestion.label }}</span>
-            <small>{{ suggestion.secondaryText }}</small>
-          </button>
-        </div>
+      <!-- Status Messages - Subtle Design -->
+      <div *ngIf="originMode === 'current-location' && !userLocation" class="bg-gray-50 rounded-xl p-4">
+        <p class="text-sm text-gray-500 flex items-center gap-2">
+          <span class="text-base">📍</span>
+          Current location unavailable. Please search for an origin.
+        </p>
       </div>
 
-      <div class="planner-action">
-        <button type="button" [disabled]="!canPlanTrip() || loading" (click)="planTrip()">
-          {{ loading ? 'Planning…' : 'Plan trip' }}
-        </button>
+      <div *ngIf="error" class="bg-red-50 rounded-xl p-4">
+        <p class="text-sm text-red-500 flex items-center gap-2">
+          <span class="text-base">⚠️</span>
+          {{ error }}
+        </p>
+      </div>
+
+      <!-- Results Section - Minimalist Cards -->
+      <div *ngIf="result" class="space-y-6">
+        <!-- Recommendation Cards -->
+        <div *ngIf="result.journeys.length > 0" class="space-y-6">
+          <!-- Selected Journey Details - Clean Timeline -->
+          <article *ngIf="selectedJourney" class="bg-gray-50 rounded-xl p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+              <div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Selected trip</p>
+                <h3 class="text-base font-medium text-gray-900">{{ selectedJourney.label }}</h3>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ selectedJourney.departureTimeText }} → {{ selectedJourney.arrivalTimeText }}
+                </p>
+              </div>
+
+              <!-- Metrics - Simple Grid -->
+              <div class="grid grid-cols-4 gap-2">
+                <div class="bg-white rounded-lg px-3 py-2 min-w-[60px]">
+                  <div class="text-[10px] text-gray-400 mb-0.5">Total</div>
+                  <div class="text-sm font-medium text-gray-900">{{ selectedJourney.totalDurationMinutes }}<span
+                      class="text-[10px] font-normal text-gray-400 ml-0.5">min</span></div>
+                </div>
+                <div class="bg-white rounded-lg px-3 py-2">
+                  <div class="text-[10px] text-gray-400 mb-0.5">Wait</div>
+                  <div class="text-sm font-medium text-gray-900">{{ selectedJourney.waitingTimeMinutes }}<span
+                      class="text-[10px] font-normal text-gray-400 ml-0.5">min</span></div>
+                </div>
+                <div class="bg-white rounded-lg px-3 py-2">
+                  <div class="text-[10px] text-gray-400 mb-0.5">Walk</div>
+                  <div class="text-sm font-medium text-gray-900">{{ selectedJourney.walkingTimeMinutes }}<span
+                      class="text-[10px] font-normal text-gray-400 ml-0.5">min</span></div>
+                </div>
+                <div class="bg-white rounded-lg px-3 py-2">
+                  <div class="text-[10px] text-gray-400 mb-0.5">Ride</div>
+                  <div class="text-sm font-medium text-gray-900">{{ selectedJourney.inVehicleTimeMinutes }}<span
+                      class="text-[10px] font-normal text-gray-400 ml-0.5">min</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline - Minimal Design -->
+            <ol class="relative">
+              <li *ngFor="let leg of selectedJourney.legs; let last = last" class="relative pb-6 last:pb-0">
+                <!-- Timeline Line -->
+                <div *ngIf="!last" class="absolute left-[11px] top-5 bottom-0 w-px bg-gray-200"></div>
+
+                <div class="flex gap-4">
+                  <!-- Dot -->
+                  <div class="flex-shrink-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center"
+                    [class]="{
+                      'border-blue-400': leg.type === 'walk',
+                      'border-green-400': leg.type === 'ride',
+                      'border-amber-400': leg.type === 'transfer'
+                    }">
+                    <span class="text-[10px]" [class]="{
+                        'text-blue-400': leg.type === 'walk',
+                        'text-green-400': leg.type === 'ride',
+                        'text-amber-400': leg.type === 'transfer'
+                      }">●</span>
+                  </div>
+
+                  <!-- Content -->
+                  <div class="flex-1">
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                      <span class="text-xs font-medium text-gray-700">{{ leg.type }}</span>
+                      <span class="text-xs text-gray-400">•</span>
+                      <span class="text-xs text-gray-500">{{ leg.durationMinutes }} min</span>
+                    </div>
+                    <div class="text-sm text-gray-900 mb-1">{{ leg.title }}</div>
+                    <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                      <span *ngIf="leg.type === 'walk' && leg.distanceMeters">
+                        🚶 {{ formatDistance(leg.distanceMeters) }}
+                      </span>
+                      <span *ngIf="leg.type === 'ride' && leg.stopCount !== undefined">
+                        🚏 {{ leg.stopCount }} stops
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </article>
+        </div>
+
+        <!-- No Results - Minimal Empty State -->
+        <ng-template #noJourneys>
+          <div class="bg-gray-50 rounded-xl p-12 text-center">
+            <div class="text-4xl mb-3 opacity-50">🚌</div>
+            <h3 class="text-sm font-medium text-gray-700 mb-1">No routes found</h3>
+            <p class="text-xs text-gray-400 max-w-sm mx-auto">
+              Try adjusting your search or choose different locations.
+            </p>
+          </div>
+        </ng-template>
       </div>
     </div>
-  </div>
-
-  <p class="planner-empty" *ngIf="originMode === 'current-location' && !userLocation">Current location is unavailable, so search-based origin selection is required.</p>
-  <p class="planner-error" *ngIf="error">{{ error }}</p>
-
-  <div *ngIf="result" class="planner-results">
-    <div *ngIf="result.journeys.length > 0; else noJourneys" class="journey-sections">
-      <div class="recommendation-grid">
-        <button
-          type="button"
-          class="recommendation-card"
-          *ngFor="let entry of recommendationEntries"
-          [class.selected]="isSelected(entry.journey)"
-          [disabled]="!entry.journey"
-          (click)="selectJourney(entry.journey)"
-        >
-          <span class="card-label">{{ entry.label }}</span>
-          <ng-container *ngIf="entry.journey as journey">
-            <strong>{{ journey.totalDurationMinutes }} min</strong>
-            <span>{{ journey.transferCount }} transfer{{ journey.transferCount === 1 ? '' : 's' }}</span>
-            <span>{{ formatDistance(journey.walkingDistanceMeters) }} walk</span>
-            <span>{{ formatCurrency(journey.estimatedFare) }}</span>
-          </ng-container>
-          <span *ngIf="!entry.journey" class="muted">No option found</span>
-        </button>
-      </div>
-
-      <div class="journey-list">
-        <button
-          type="button"
-          class="journey-row"
-          *ngFor="let journey of result.journeys"
-          [class.selected]="isSelected(journey)"
-          (click)="selectJourney(journey)"
-        >
-          <div>
-            <strong>{{ journey.label }}</strong>
-            <p>{{ journey.summary }}</p>
-          </div>
-          <div class="journey-meta">
-            <span>{{ journey.departureTimeText }} → {{ journey.arrivalTimeText }}</span>
-            <span>{{ formatDistance(journey.walkingDistanceMeters) }}</span>
-          </div>
-        </button>
-      </div>
-
-      <article *ngIf="selectedJourney" class="selected-journey">
-        <div class="journey-overview">
-          <div>
-            <p class="eyebrow">Selected trip</p>
-            <h3>{{ selectedJourney.label }}</h3>
-            <p class="overview-line">Leave at {{ selectedJourney.departureTimeText }} and arrive at {{ selectedJourney.arrivalTimeText }}</p>
-          </div>
-
-          <div class="metric-grid">
-            <div>
-              <span>Total</span>
-              <strong>{{ selectedJourney.totalDurationMinutes }} min</strong>
-            </div>
-            <div>
-              <span>Wait</span>
-              <strong>{{ selectedJourney.waitingTimeMinutes }} min</strong>
-            </div>
-            <div>
-              <span>Walk</span>
-              <strong>{{ selectedJourney.walkingTimeMinutes }} min</strong>
-            </div>
-            <div>
-              <span>Ride</span>
-              <strong>{{ selectedJourney.inVehicleTimeMinutes }} min</strong>
-            </div>
-          </div>
-        </div>
-
-        <ol class="legs-list">
-          <li *ngFor="let leg of selectedJourney.legs">
-            <div class="leg-badge" [class.walk]="leg.type === 'walk'" [class.ride]="leg.type === 'ride'" [class.transfer]="leg.type === 'transfer'">
-              {{ leg.type }}
-            </div>
-            <div class="leg-copy">
-              <strong>{{ leg.title }}</strong>
-              <span *ngIf="leg.type === 'walk' && leg.distanceMeters">{{ formatDistance(leg.distanceMeters) }}</span>
-              <span *ngIf="leg.type === 'ride' && leg.stopCount !== undefined">{{ leg.stopCount }} stops</span>
-              <span>{{ leg.durationMinutes }} min</span>
-            </div>
-          </li>
-        </ol>
-      </article>
-    </div>
-
-    <ng-template #noJourneys>
-      <p class="planner-empty">Google Maps did not return a transit journey for this origin and destination.</p>
-    </ng-template>
   </div>
 </section>

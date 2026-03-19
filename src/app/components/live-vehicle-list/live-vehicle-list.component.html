@@ -31,7 +31,7 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="loading" class="flex flex-col items-center justify-center py-16">
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-16 h-[250px]">
         <div class="relative">
             <div class="w-10 h-10 border-2 border-gray-100 border-t-green-400 rounded-full animate-spin"></div>
             <div class="absolute inset-0 flex items-center justify-center">
@@ -43,7 +43,7 @@
 
     <!-- Empty State -->
     <div *ngIf="!loading && vehicles.length === 0"
-        class="flex flex-col items-center justify-center py-16 px-5 max-h-[200px]">
+        class="flex flex-col items-center justify-center py-16 px-5 max-h-[250px]">
         <div class="relative mb-4">
             <div class="text-6xl mb-2 opacity-30 animate-float">🚎</div>
             <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-100 rounded-full"></div>

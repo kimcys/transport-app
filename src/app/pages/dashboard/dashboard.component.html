@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-gray-100">
   <!-- Header -->
-  <header class="bg-white shadow-sm sticky top-0 z-10">
+  <header class="bg-white shadow-sm sticky top-0 z-[200]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-900">
@@ -20,12 +20,6 @@
       (agencyChange)="onAgencyChange($event)" (categoryChange)="onCategoryChange($event)"
       (routeSelect)="onRouteSelect($event)" (stopSearch)="loadStops($event)">
     </app-filters-bar>
-
-    <app-trip-planner
-      [userLocation]="userLocation"
-      (journeySelect)="onJourneySelect($event)">
-    </app-trip-planner>
-
     <!-- Stats Cards Component -->
     <app-stats-cards [vehicles]="vehicles" [routes]="routes" [nearestTransports]="nearestTransports"
       [selectedAgency]="selectedAgency" [lastUpdated]="lastUpdated">
@@ -50,14 +44,17 @@
       <!-- Map Column (2/3 width) -->
       <div class="lg:col-span-2">
         <app-transport-map [vehicles]="vehicles" [stops]="stops" [userLocation]="userLocation" [center]="mapCenter"
-          [journey]="selectedJourney"
-          [zoom]="mapZoom" (centerChange)="onMapCenterChange($event)" (markerClick)="onMarkerClick($event)">
+          [journey]="selectedJourney" [zoom]="mapZoom" (centerChange)="onMapCenterChange($event)"
+          (markerClick)="onMarkerClick($event)">
         </app-transport-map>
       </div>
     </div>
 
     <!-- Timetable Modal/Section -->
-    <div>
+    <div class="grid grid-cols-1 lg:grid-cols-1 gap-4">
+      <app-trip-planner [userLocation]="userLocation" (journeySelect)="onJourneySelect($event)">
+      </app-trip-planner>
+
       <app-timetable-view [stopTimes]="tripStops" [trips]="trips" [route]="selectedRoute" [loading]="loading.timetable"
         [stops]="stops" (selectStop)="onSelectMapLocation($event)" (close)="closeTimetable()">
       </app-timetable-view>

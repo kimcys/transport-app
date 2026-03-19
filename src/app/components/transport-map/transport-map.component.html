@@ -1,12 +1,9 @@
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="h-[600px] w-full relative" #mapContainer>
+    <div class="h-[700px] w-full relative" #mapContainer>
         <google-map [center]="center" [zoom]="zoom" [options]="options" (mapClick)="onMapClick()" height="100%"
             width="100%" (mapInitialized)="onMapInit($event)">
 
-            <map-polyline
-                *ngFor="let polyline of journeyPolylines"
-                [path]="polyline.path"
-                [options]="polyline.options">
+            <map-polyline *ngFor="let polyline of journeyPolylines" [path]="polyline.path" [options]="polyline.options">
             </map-polyline>
 
             <!-- Geofence Circle (50km radius) -->
@@ -129,7 +126,8 @@
                                 </div>
 
                                 <div class="info-footer single">
-                                    <span>{{ marker.position.lat.toFixed(4) }}, {{ marker.position.lng.toFixed(4) }}</span>
+                                    <span>{{ marker.position.lat.toFixed(4) }}, {{ marker.position.lng.toFixed(4)
+                                        }}</span>
                                 </div>
                             </div>
                         </ng-container>
