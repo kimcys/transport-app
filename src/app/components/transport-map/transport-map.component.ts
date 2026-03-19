@@ -143,8 +143,8 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
           return;
         }
 
-        const baseRadius = 20000;
-        const extraRadius = 10000;
+        const baseRadius = 2000;
+        const extraRadius = 1000;
         const duration = 2000;
 
         this.pulseCircleRefs.forEach((circle, i) => {
@@ -175,13 +175,13 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       const circle = new google.maps.Circle({
         map: this.map!,
         center: this.center,
-        radius: 20000,
+        radius: 2000,
         clickable: false,
         strokeColor: '#2196F3',
-        strokeOpacity: 0.3,
+        strokeOpacity: 0.25,
         strokeWeight: 2,
         fillColor: '#2196F3',
-        fillOpacity: 0.08,
+        fillOpacity: 0.06,
         zIndex: 2
       });
 
