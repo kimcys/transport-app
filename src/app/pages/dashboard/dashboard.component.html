@@ -21,6 +21,11 @@
       (routeSelect)="onRouteSelect($event)" (stopSearch)="loadStops($event)">
     </app-filters-bar>
 
+    <app-trip-planner
+      [userLocation]="userLocation"
+      (journeySelect)="onJourneySelect($event)">
+    </app-trip-planner>
+
     <!-- Stats Cards Component -->
     <app-stats-cards [vehicles]="vehicles" [routes]="routes" [nearestTransports]="nearestTransports"
       [selectedAgency]="selectedAgency" [lastUpdated]="lastUpdated">
@@ -45,6 +50,7 @@
       <!-- Map Column (2/3 width) -->
       <div class="lg:col-span-2">
         <app-transport-map [vehicles]="vehicles" [stops]="stops" [userLocation]="userLocation" [center]="mapCenter"
+          [journey]="selectedJourney"
           [zoom]="mapZoom" (centerChange)="onMapCenterChange($event)" (markerClick)="onMarkerClick($event)">
         </app-transport-map>
       </div>

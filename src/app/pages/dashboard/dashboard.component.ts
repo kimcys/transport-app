@@ -3,9 +3,9 @@ import { Feed } from '../../models/feed.model';
 import { VehiclePosition } from '../../models/vehicle.model';
 import { Route, Trip } from '../../models/route.model';
 import { Stop, TripStop } from '../../models/stop.model';
-import { NearestTransport } from '../../models/trip.model';
+import { JourneyOption, NearestTransport } from '../../models/trip.model';
 import { LocationService, UserLocation } from '../../services/location.service';
-import { interval, Subscription, switchMap } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { GtfsService } from '../../services/gtfs.service';
 import { FiltersBarComponent } from '../../components/filters-bar/filters-bar.component';
 import { NearestTransportComponent } from '../../components/nearest-transport/nearest-transport.component';
@@ -13,6 +13,7 @@ import { StatsCardsComponent } from '../../components/stats-cards/stats-cards.co
 import { TimetableViewComponent } from '../../components/timetable-view/timetable-view.component';
 import { TransportMapComponent } from '../../components/transport-map/transport-map.component';
 import { LiveVehicleListComponent } from '../../components/live-vehicle-list/live-vehicle-list.component';
+import { TripPlannerComponent } from '../../components/trip-planner/trip-planner.component';
 import { CommonModule, DatePipe } from '@angular/common';
 
 @Component({
@@ -24,6 +25,7 @@ import { CommonModule, DatePipe } from '@angular/common';
     StatsCardsComponent,
     TimetableViewComponent,
     TransportMapComponent,
+    TripPlannerComponent,
     DatePipe,
     CommonModule
   ],
@@ -39,6 +41,7 @@ export class DashboardComponent {
   tripStops: TripStop[] = [];
   trips: Trip[] = [];
   nearestTransports: NearestTransport[] = [];
+  selectedJourney: JourneyOption | null = null;
 
   // Selected items
   selectedAgency = '';
@@ -128,6 +131,7 @@ export class DashboardComponent {
     this.selectedCategory = '';
     this.selectedRoute = null;
     this.showTimetable = false;
+    this.selectedJourney = null;
 
     this.routes = [];
     this.stops = [];
@@ -148,6 +152,7 @@ export class DashboardComponent {
     this.stops = [];
     this.vehicles = [];
     this.nearestTransports = [];
+    this.selectedJourney = null;
 
     this.loadRoutes();
     this.loadStops();
@@ -408,6 +413,15 @@ export class DashboardComponent {
 
   onMarkerClick(data: any) {
     // Handle marker click if needed
+  }
+
+  onJourneySelect(journey: JourneyOption | null) {
+    this.selectedJourney = journey;
+
+    if (journey?.mapMarkers.length) {
+      this.mapCenter = journey.mapMarkers[0].position;
+      this.mapZoom = 14;
+    }
   }
 
   // ============== UTILITY ==============

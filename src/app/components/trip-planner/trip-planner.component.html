@@ -1,0 +1,145 @@
+<section class="planner-shell">
+  <div class="planner-header">
+    <div>
+      <p class="eyebrow">Trip Planner</p>
+      <h2>Google search to destination routing</h2>
+    </div>
+    <p class="planner-note">Search any address, landmark, station, or stop and get Google transit routes with the vehicle used on each leg.</p>
+  </div>
+
+  <div class="planner-controls">
+    <div class="mode-toggle">
+      <button type="button" [class.active]="originMode === 'current-location'" (click)="setOriginMode('current-location')">
+        From current location
+      </button>
+      <button type="button" [class.active]="originMode === 'search'" (click)="setOriginMode('search')">
+        Search origin
+      </button>
+    </div>
+
+    <div class="form-grid">
+      <div *ngIf="originMode === 'search'" class="field">
+        <label for="origin-stop">From</label>
+        <input id="origin-stop" type="text" [(ngModel)]="originQuery" (ngModelChange)="onOriginQueryChange()"
+          placeholder="Search origin with Google" />
+        <div class="suggestions" *ngIf="originSuggestions.length > 0">
+          <button type="button" *ngFor="let suggestion of originSuggestions" (click)="chooseOriginSuggestion(suggestion)">
+            <span>{{ suggestion.label }}</span>
+            <small>{{ suggestion.secondaryText }}</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="destination-stop">To</label>
+        <input id="destination-stop" type="text" [(ngModel)]="destinationQuery" (ngModelChange)="onDestinationQueryChange()"
+          placeholder="Search destination with Google" />
+        <div class="suggestions" *ngIf="destinationSuggestions.length > 0">
+          <button type="button" *ngFor="let suggestion of destinationSuggestions" (click)="chooseDestinationSuggestion(suggestion)">
+            <span>{{ suggestion.label }}</span>
+            <small>{{ suggestion.secondaryText }}</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="planner-action">
+        <button type="button" [disabled]="!canPlanTrip() || loading" (click)="planTrip()">
+          {{ loading ? 'Planning…' : 'Plan trip' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p class="planner-empty" *ngIf="originMode === 'current-location' && !userLocation">Current location is unavailable, so search-based origin selection is required.</p>
+  <p class="planner-error" *ngIf="error">{{ error }}</p>
+
+  <div *ngIf="result" class="planner-results">
+    <div *ngIf="result.journeys.length > 0; else noJourneys" class="journey-sections">
+      <div class="recommendation-grid">
+        <button
+          type="button"
+          class="recommendation-card"
+          *ngFor="let entry of recommendationEntries"
+          [class.selected]="isSelected(entry.journey)"
+          [disabled]="!entry.journey"
+          (click)="selectJourney(entry.journey)"
+        >
+          <span class="card-label">{{ entry.label }}</span>
+          <ng-container *ngIf="entry.journey as journey">
+            <strong>{{ journey.totalDurationMinutes }} min</strong>
+            <span>{{ journey.transferCount }} transfer{{ journey.transferCount === 1 ? '' : 's' }}</span>
+            <span>{{ formatDistance(journey.walkingDistanceMeters) }} walk</span>
+            <span>{{ formatCurrency(journey.estimatedFare) }}</span>
+          </ng-container>
+          <span *ngIf="!entry.journey" class="muted">No option found</span>
+        </button>
+      </div>
+
+      <div class="journey-list">
+        <button
+          type="button"
+          class="journey-row"
+          *ngFor="let journey of result.journeys"
+          [class.selected]="isSelected(journey)"
+          (click)="selectJourney(journey)"
+        >
+          <div>
+            <strong>{{ journey.label }}</strong>
+            <p>{{ journey.summary }}</p>
+          </div>
+          <div class="journey-meta">
+            <span>{{ journey.departureTimeText }} → {{ journey.arrivalTimeText }}</span>
+            <span>{{ formatDistance(journey.walkingDistanceMeters) }}</span>
+          </div>
+        </button>
+      </div>
+
+      <article *ngIf="selectedJourney" class="selected-journey">
+        <div class="journey-overview">
+          <div>
+            <p class="eyebrow">Selected trip</p>
+            <h3>{{ selectedJourney.label }}</h3>
+            <p class="overview-line">Leave at {{ selectedJourney.departureTimeText }} and arrive at {{ selectedJourney.arrivalTimeText }}</p>
+          </div>
+
+          <div class="metric-grid">
+            <div>
+              <span>Total</span>
+              <strong>{{ selectedJourney.totalDurationMinutes }} min</strong>
+            </div>
+            <div>
+              <span>Wait</span>
+              <strong>{{ selectedJourney.waitingTimeMinutes }} min</strong>
+            </div>
+            <div>
+              <span>Walk</span>
+              <strong>{{ selectedJourney.walkingTimeMinutes }} min</strong>
+            </div>
+            <div>
+              <span>Ride</span>
+              <strong>{{ selectedJourney.inVehicleTimeMinutes }} min</strong>
+            </div>
+          </div>
+        </div>
+
+        <ol class="legs-list">
+          <li *ngFor="let leg of selectedJourney.legs">
+            <div class="leg-badge" [class.walk]="leg.type === 'walk'" [class.ride]="leg.type === 'ride'" [class.transfer]="leg.type === 'transfer'">
+              {{ leg.type }}
+            </div>
+            <div class="leg-copy">
+              <strong>{{ leg.title }}</strong>
+              <span *ngIf="leg.type === 'walk' && leg.distanceMeters">{{ formatDistance(leg.distanceMeters) }}</span>
+              <span *ngIf="leg.type === 'ride' && leg.stopCount !== undefined">{{ leg.stopCount }} stops</span>
+              <span>{{ leg.durationMinutes }} min</span>
+            </div>
+          </li>
+        </ol>
+      </article>
+    </div>
+
+    <ng-template #noJourneys>
+      <p class="planner-empty">Google Maps did not return a transit journey for this origin and destination.</p>
+    </ng-template>
+  </div>
+</section>

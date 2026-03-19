@@ -1,6 +1,6 @@
 // transport-map.component.ts
 import {
-  Component, Input, Output, EventEmitter, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, AfterViewInit, ElementRef, AfterViewChecked, OnDestroy,
+  Component, Input, Output, EventEmitter, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, AfterViewInit, ElementRef, OnDestroy,
   NgZone,
   ChangeDetectionStrategy
 } from '@angular/core';
@@ -10,6 +10,7 @@ import { Stop } from '../../models/stop.model';
 import { UserLocation } from '../../services/location.service';
 import { CommonModule } from '@angular/common';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
+import { JourneyOption } from '../../models/trip.model';
 
 interface MapMarkerData {
   position: google.maps.LatLngLiteral;
@@ -17,7 +18,7 @@ interface MapMarkerData {
   options: google.maps.MarkerOptions;
   data: any;
   id: string;
-  type: 'vehicle' | 'stop' | 'user';
+  type: 'vehicle' | 'stop' | 'user' | 'journey';
 }
 
 @Component({
@@ -35,6 +36,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   @Input() vehicles: VehiclePosition[] = [];
   @Input() stops: Stop[] = [];
   @Input() userLocation: UserLocation | null = null;
+  @Input() journey: JourneyOption | null = null;
   @Input() center: google.maps.LatLngLiteral = { lat: 3.139, lng: 101.6869 };
   @Input() zoom = 12;
 
@@ -87,6 +89,8 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   stopMarkers: MapMarkerData[] = [];
   userMarker: MapMarkerData | null = null;
   selectedMarker: any = null;
+  journeyMarkerData: MapMarkerData[] = [];
+  journeyPolylines: Array<{ id: string; path: google.maps.LatLngLiteral[]; options: google.maps.PolylineOptions }> = [];
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['vehicles']) {
@@ -100,9 +104,13 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     if (changes['userLocation']) {
       this.updateUserMarker();
 
-      if (this.map && this.geofenceCenter) {
+      if (this.map && this.geofenceCenter && !this.journey) {
         this.fitMapToGeofence();
       }
+    }
+
+    if (changes['journey']) {
+      this.updateJourneyOverlay();
     }
 
     if (changes['center'] && this.map) {
@@ -210,6 +218,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   onMapInit(map: google.maps.Map) {
     this.map = map;
     this.fitMapToGeofence();
+    this.fitMapToJourney();
 
     if (this.geofenceCenter) {
       this.initPulseCircles();
@@ -298,6 +307,22 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     }
   }
 
+  private fitMapToJourney() {
+    if (!this.map || !this.journey) {
+      return;
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+    this.journey.mapSegments.forEach((segment) => {
+      segment.path.forEach((point) => bounds.extend(point));
+    });
+    this.journey.mapMarkers.forEach((marker) => bounds.extend(marker.position));
+
+    if (!bounds.isEmpty()) {
+      this.map.fitBounds(bounds, 64);
+    }
+  }
+
   updateStopMarkers() {
     const stationIconSvg = '/icons/gps.svg';
 
@@ -355,6 +380,61 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     if (this.infoWindow) {
       this.infoWindow.close();
     }
+  }
+
+  private updateJourneyOverlay() {
+    if (!this.journey) {
+      this.journeyMarkerData = [];
+      this.journeyPolylines = [];
+      return;
+    }
+
+    this.journeyMarkerData = this.journey.mapMarkers.map((marker) => ({
+      id: `journey-${marker.id}`,
+      type: 'journey',
+      position: marker.position,
+      title: marker.label,
+      options: {
+        label: {
+          text: marker.label,
+          color: '#ffffff',
+          fontWeight: '700'
+        },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: marker.kind === 'transfer' ? 11 : 9,
+          fillColor: marker.kind === 'start' ? '#059669' : marker.kind === 'end' ? '#dc2626' : '#d97706',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        },
+        zIndex: 250
+      },
+      data: marker
+    }));
+
+    this.journeyPolylines = this.journey.mapSegments.map((segment, index) => ({
+      id: `polyline-${index}`,
+      path: segment.path,
+      options: {
+        clickable: false,
+        geodesic: true,
+        strokeColor: segment.kind === 'walk' ? '#2563eb' : '#d97706',
+        strokeOpacity: segment.kind === 'walk' ? 0 : 0.9,
+        strokeWeight: segment.kind === 'walk' ? 2 : 5,
+        icons: segment.kind === 'walk' ? [{
+          icon: {
+            path: 'M 0,-1 0,1',
+            strokeOpacity: 1,
+            scale: 3
+          },
+          offset: '0',
+          repeat: '12px'
+        }] : undefined
+      }
+    }));
+
+    setTimeout(() => this.fitMapToJourney(), 150);
   }
 
   onMarkerClick(markerRef: MapMarker, markerData: MapMarkerData) {
