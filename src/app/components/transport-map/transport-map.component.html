@@ -21,7 +21,91 @@
 
             <!-- Info Window -->
             <map-info-window #infoWindow>
-                <div [innerHTML]="selectedInfo"></div>
+                <div class="m-0 p-0">
+                    <div class="info-card" *ngIf="selectedMarkerData as marker">
+                        <!-- VEHICLE -->
+                        <ng-container *ngIf="marker.type === 'vehicle'">
+                            <div class="vehicle-card-header"
+                                [style.background]="agencyColor(marker.data.feed_agency, marker.data.feed_category)">
+                                <div class="info-title text-white">
+                                    {{ marker.data.route_id || 'Vehicle' }}
+                                </div>
+                            </div>
+
+                            <div class="info-card-body">
+                                <div class="flex flex-col gap-3">
+
+                                    <!-- Speed -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="info-label">Speed</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-semibold"
+                                                [style.color]="marker.data.speed > 0 ? '#10b981' : '#f59e0b'">
+                                                {{ marker.data.speed }} km/h
+                                            </span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded"
+                                                [style.background]="marker.data.speed > 0 ? '#ecfdf5' : '#fffbeb'"
+                                                [style.color]="marker.data.speed > 0 ? '#10b981' : '#f59e0b'">
+                                                {{ marker.data.speed > 0 ? 'Moving' : 'Stopped' }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Coordinates -->
+                                    <div class="flex items-center justify-between border-t pt-2">
+                                        <span class="info-label">Location</span>
+                                        <span class="text-xs text-gray-700 font-medium">
+                                            {{ marker.data.lat.toFixed(4) }}, {{ marker.data.lon.toFixed(4) }}
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <!-- STOP -->
+                        <ng-container *ngIf="marker.type === 'stop'">
+                            <div class="stop-card-header">
+                                <div class="info-label light">Bus Stop</div>
+                                <div class="stop-title">{{ marker.data.stop_name }}</div>
+                            </div>
+
+                            <div class="info-card-body">
+                                <div class="stop-row">
+                                    <span class="muted">Stop ID</span>
+                                    <span class="info-chip gray">{{ marker.data.stop_id }}</span>
+                                </div>
+
+                                <div class="info-footer single">
+                                    <span>{{ marker.data.stop_lat.toFixed(4) }}, {{ marker.data.stop_lon.toFixed(4)
+                                        }}</span>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <!-- USER -->
+                        <ng-container *ngIf="marker.type === 'user'">
+                            <div class="user-card-header">
+                                <div class="user-avatar">👤</div>
+                                <div>
+                                    <div class="info-label light">Your location</div>
+                                    <div class="user-title">You are here</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card-body">
+                                <div class="stop-row">
+                                    <span class="muted">Latitude</span>
+                                    <span>{{ marker.data.location.lat.toFixed(6) }}</span>
+                                </div>
+                                <div class="stop-row">
+                                    <span class="muted">Longitude</span>
+                                    <span>{{ marker.data.location.lng.toFixed(6) }}</span>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+                </div>
             </map-info-window>
         </google-map>
 
@@ -56,7 +140,7 @@
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                     </span>
-                    20km geofence radius
+                    2km geofence radius
                 </div>
             </div>
         </div>

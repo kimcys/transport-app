@@ -17,6 +17,7 @@ interface MapMarkerData {
   options: google.maps.MarkerOptions;
   data: any;
   id: string;
+  type: 'vehicle' | 'stop' | 'user';
 }
 
 @Component({
@@ -47,6 +48,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   private stopMarkerRefs: google.maps.Marker[] = [];
   private pulseCircleRefs: google.maps.Circle[] = [];
   private pulseAnimationId: number | null = null;
+  selectedMarkerData: MapMarkerData | null = null;
 
   constructor(private ngZone: NgZone) { }
 
@@ -293,6 +295,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
     this.stopMarkers = this.stops.map((stop, index) => ({
       id: `stop-${stop.stop_id}-${index}`,
+      type: 'stop',
       position: { lat: stop.stop_lat, lng: stop.stop_lon },
       title: stop.stop_name,
       options: {
@@ -306,7 +309,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       data: stop
     }));
 
-    // Re-setup clustering after markers update
     setTimeout(() => this.setupClustering(), 500);
   }
 
@@ -314,6 +316,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     if (this.userLocation) {
       this.userMarker = {
         id: 'user-location',
+        type: 'user',
         position: { lat: this.userLocation.lat, lng: this.userLocation.lng },
         title: 'You are here',
         options: {
@@ -336,86 +339,20 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     }
   }
 
-  // transport-map.component.ts - Update the onMarkerClick method
-
   onMarkerClick(markerRef: MapMarker, markerData: MapMarkerData) {
-    const data = markerData.data;
-    this.selectedMarker = data;
-
-    if (data.route_id) {
-      const speedClass = data.speed === 0 ? 'text-amber-600' : 'text-emerald-600';
-      const speedIcon = data.speed === 0 ? '●' : '▶';
-      const isMoving = data.speed > 0;
-
-      // Simplify the HTML string - remove template literals that might cause issues
-      this.selectedInfo = `
-      <div style="padding: 12px; min-width: 240px; font-family: system-ui, -apple-system, sans-serif;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="background: #e6f0ff; padding: 4px 8px; border-radius: 6px; font-weight: bold; color: #2563eb;">${data.route_id}</span>
-          <span style="color: #6b7280; font-size: 12px;">${data.vehicle_id}</span>
-        </div>
-        <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-          <div>
-            <div style="color: #9ca3af; font-size: 11px;">Speed</div>
-            <div style="font-weight: 600; color: ${data.speed === 0 ? '#d97706' : '#10b981'};">${data.speed} km/h</div>
-          </div>
-          <div>
-            <div style="color: #9ca3af; font-size: 11px;">Direction</div>
-            <div style="font-weight: 600; color: #374151;">${this.getBearingDirection(data.bearing)} (${data.bearing}°)</div>
-          </div>
-        </div>
-        <div style="border-top: 1px solid #f3f4f6; padding-top: 6px; font-size: 11px; color: #9ca3af;">
-          <span>📍 ${data.lat.toFixed(4)}, ${data.lon.toFixed(4)}</span>
-        </div>
-        <div style="font-size: 10px; color: #d1d5db; margin-top: 4px;">
-          Updated ${this.getTimeAgo(data.observed_at)}
-        </div>
-      </div>
-    `;
-    } else if (data.stop_name) {
-      this.selectedInfo = `
-      <div style="padding: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
-        <div style="font-weight: 500; color: #6b7280; font-size: 12px; margin-bottom: 2px;">Stop</div>
-        <div style="font-weight: 600; color: #111827; font-size: 14px; margin-bottom: 8px;">${data.stop_name}</div>
-        <div style="border-top: 1px solid #f3f4f6; padding-top: 6px; font-size: 11px; color: #6b7280;">
-          <div>ID: ${data.stop_id}</div>
-          <div>📍 ${data.stop_lat.toFixed(4)}, ${data.stop_lon.toFixed(4)}</div>
-        </div>
-      </div>
-    `;
-    } else if (data.type === 'user') {
-      this.selectedInfo = `
-      <div style="padding: 12px; min-width: 180px; font-family: system-ui, -apple-system, sans-serif;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="font-size: 20px;">👤</span>
-          <div>
-            <div style="font-weight: 500; color: #6b7280; font-size: 12px;">Your Location</div>
-            <div style="font-weight: 600; color: #111827;">You are here</div>
-          </div>
-        </div>
-        <div style="border-top: 1px solid #f3f4f6; padding-top: 6px; font-size: 11px; color: #6b7280;">
-          <div>${data.location.lat.toFixed(6)}</div>
-          <div>${data.location.lng.toFixed(6)}</div>
-        </div>
-      </div>
-    `;
-    }
-
-    this.markerClick.emit(data);
-
-    // Add a small delay to ensure the info window content is set
-    setTimeout(() => {
-      this.infoWindow.open(markerRef);
-    }, 50);
+    this.selectedMarkerData = markerData;
+    this.selectedMarker = markerData.data;
+    this.markerClick.emit(markerData.data);
+    setTimeout(() => { this.infoWindow.open(markerRef); }, 50);
   }
 
-  private getBearingDirection(bearing: number): string {
+  getBearingDirection(bearing: number): string {
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
     const index = Math.round(bearing / 22.5) % 16;
     return directions[index];
   }
 
-  private getTimeAgo(timestamp: string): string {
+  getTimeAgo(timestamp: string): string {
     const now = new Date();
     const past = new Date(timestamp);
     const diffMs = now.getTime() - past.getTime();
@@ -432,7 +369,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     return past.toLocaleDateString();
   }
 
-  private agencyColor(agency: string, category?: string | null): string {
+  agencyColor(agency: string, category?: string | null): string {
     agency = agency?.toLowerCase() ?? '';
     category = category?.toLowerCase() ?? '';
 
@@ -454,24 +391,23 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
   updateVehicleMarkers() {
     this.vehicleMarkers = this.vehicles.map((vehicle, index) => {
-      const color = this.agencyColor(
-        vehicle.feed_agency,
-        vehicle.feed_category
-      );
+      const color = this.agencyColor(vehicle.feed_agency, vehicle.feed_category);
 
       return {
         id: `vehicle-${vehicle.vehicle_id}-${index}`,
+        type: 'vehicle',
         position: { lat: vehicle.lat, lng: vehicle.lon },
-        title: `${vehicle.route_id} - ${vehicle.vehicle_id}`,
+        title: `${vehicle.route_id || 'No Route'} - ${vehicle.vehicle_id}`,
         options: {
           icon: {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             rotation: vehicle.bearing,
-            scale: 5,
+            scale: 6,
             fillColor: color,
             fillOpacity: 1,
             strokeWeight: 2,
-            strokeColor: '#FFFFFF'
+            strokeColor: '#FFFFFF',
+            anchor: new google.maps.Point(0, 3)
           },
           zIndex: 100
         },
@@ -479,7 +415,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       };
     });
 
-    // Re-setup clustering after markers update
     setTimeout(() => this.setupClustering(), 500);
   }
 
