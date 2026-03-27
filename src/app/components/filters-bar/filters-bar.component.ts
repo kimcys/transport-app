@@ -18,7 +18,7 @@ export class FiltersBarComponent implements OnInit, OnChanges {
 
   @Output() agencyChange = new EventEmitter<string>();
   @Output() categoryChange = new EventEmitter<string>();
-  @Output() routeSelect = new EventEmitter<Route>();
+  @Output() routeSelect = new EventEmitter<Route | null>();
   @Output() stopSearch = new EventEmitter<string>();
 
   selectedAgency = '';
@@ -57,6 +57,9 @@ export class FiltersBarComponent implements OnInit, OnChanges {
     this.selectedRoute = null;
     this.categories = [];
 
+    this.routeSelect.emit(null);
+    this.stopSearch.emit('');
+
     if (this.selectedAgency && this.feeds) {
       // Extract categories for selected agency from feed objects
       const staticFeeds = this.feeds.static.filter((f: any) => f.agency === this.selectedAgency);
@@ -83,6 +86,7 @@ export class FiltersBarComponent implements OnInit, OnChanges {
   onCategorySelect() {
     // Clear selected route when category changes
     this.selectedRoute = null;
+    this.routeSelect.emit(null);
 
     // Emit category change (empty string means "All Categories")
     this.categoryChange.emit(this.selectedCategory);
@@ -101,6 +105,8 @@ export class FiltersBarComponent implements OnInit, OnChanges {
     this.categories = [];
 
     // Emit all clear events
+    this.routeSelect.emit(null);
+    this.stopSearch.emit('');
     this.agencyChange.emit('');
     this.categoryChange.emit('');
   }

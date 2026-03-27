@@ -197,22 +197,36 @@ export class DashboardComponent {
     });
   }
 
-  onRouteSelect(route: Route) {
+  onRouteSelect(route: Route | null) {
+    if (!route) {
+      this.selectedRoute = null;
+      this.showTimetable = false;
+      this.trips = [];
+      this.tripStops = [];
+      this.selectedJourney = null;
+  
+      if (this.timetableSub) this.timetableSub.unsubscribe();
+      this.stopTimesSubs.forEach(s => s.unsubscribe());
+      this.stopTimesSubs = [];
+  
+      this.findNearestTransport();
+      return;
+    }
+  
     this.selectedRoute = route;
     this.showTimetable = true;
     this.loading.timetable = true;
-
+  
     if (this.timetableSub) this.timetableSub.unsubscribe();
-    // Clear stop times subs as well when selecting a new route
     this.stopTimesSubs.forEach(s => s.unsubscribe());
     this.stopTimesSubs = [];
-
-    this.timetableSub = this.gtfsService.getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
+  
+    this.timetableSub = this.gtfsService
+      .getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
       .subscribe({
         next: (trips) => {
           this.trips = trips;
           if (trips.length > 0) {
-            // Load stop times for ALL trips, not just the first one
             this.loadAllTripStopTimes(trips);
           } else {
             this.loading.timetable = false;
@@ -223,8 +237,7 @@ export class DashboardComponent {
           this.loading.timetable = false;
         }
       });
-
-    // Re-calculate nearest transport specifically for this route
+  
     this.findNearestTransport();
   }
 
