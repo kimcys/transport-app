@@ -1,6 +1,16 @@
-// transport-map.component.ts
 import {
-  Component, Input, Output, EventEmitter, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, AfterViewInit, ElementRef, OnDestroy,
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ViewChild,
+  ViewChildren,
+  QueryList,
+  OnChanges,
+  SimpleChanges,
+  AfterViewInit,
+  ElementRef,
+  OnDestroy,
   NgZone,
   ChangeDetectionStrategy
 } from '@angular/core';
@@ -50,10 +60,23 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   private stopMarkerRefs: google.maps.Marker[] = [];
   private pulseCircleRefs: google.maps.Circle[] = [];
   private pulseAnimationId: number | null = null;
+  private clusteringTimeout: ReturnType<typeof setTimeout> | null = null;
+
   selectedMarkerData: MapMarkerData | null = null;
+  selectedMarker: any = null;
   geofenceCenter: google.maps.LatLngLiteral | null = null;
 
-  constructor(private ngZone: NgZone) { }
+  vehicleMarkers: MapMarkerData[] = [];
+  stopMarkers: MapMarkerData[] = [];
+  userMarker: MapMarkerData | null = null;
+  journeyMarkerData: MapMarkerData[] = [];
+  journeyPolylines: Array<{
+    id: string;
+    path: google.maps.LatLngLiteral[];
+    options: google.maps.PolylineOptions;
+  }> = [];
+
+  constructor(private ngZone: NgZone) {}
 
   options: google.maps.MapOptions = {
     mapTypeId: 'roadmap',
@@ -84,13 +107,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     draggable: false,
     zIndex: 1
   };
-
-  vehicleMarkers: MapMarkerData[] = [];
-  stopMarkers: MapMarkerData[] = [];
-  userMarker: MapMarkerData | null = null;
-  selectedMarker: any = null;
-  journeyMarkerData: MapMarkerData[] = [];
-  journeyPolylines: Array<{ id: string; path: google.maps.LatLngLiteral[]; options: google.maps.PolylineOptions }> = [];
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['vehicles']) {
@@ -123,13 +139,69 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   ngAfterViewInit() {
     this.mapMarkers.changes.subscribe(() => {
       this.attachMarkerData();
-      this.setupClustering();
+      this.scheduleClustering();
     });
 
     setTimeout(() => {
       this.attachMarkerData();
-      this.setupClustering();
-    }, 1000);
+      this.scheduleClustering();
+    }, 300);
+  }
+
+  ngOnDestroy() {
+    if (this.pulseAnimationId !== null) {
+      cancelAnimationFrame(this.pulseAnimationId);
+      this.pulseAnimationId = null;
+    }
+
+    if (this.clusteringTimeout) {
+      clearTimeout(this.clusteringTimeout);
+      this.clusteringTimeout = null;
+    }
+
+    this.clearPulseCircles();
+    this.clearMapSelection();
+    this.clearVehicleMarkers();
+    this.clearStopMarkers();
+  }
+
+  onMapInit(map: google.maps.Map) {
+    this.map = map;
+
+    this.fitMapToGeofence();
+    this.fitMapToJourney();
+
+    if (this.geofenceCenter) {
+      this.initPulseCircles();
+    }
+
+    if (this.pulseAnimationId === null) {
+      this.startPulse();
+    }
+
+    this.scheduleClustering();
+  }
+
+  onMapClick() {
+    this.clearMapSelection();
+  }
+
+  onMarkerClick(markerRef: MapMarker, markerData: MapMarkerData) {
+    this.selectedMarkerData = markerData;
+    this.selectedMarker = markerData.data;
+    this.markerClick.emit(markerData.data);
+
+    setTimeout(() => {
+      this.infoWindow?.open(markerRef);
+    }, 50);
+  }
+
+  onMapCenterChange() {
+    // The center is handled by the google-map component
+  }
+
+  trackByMarkerId(index: number, marker: MapMarkerData): string {
+    return marker.id;
   }
 
   private attachMarkerData() {
@@ -143,6 +215,102 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         (marker as any).markerData = this.userMarker;
       }
     });
+  }
+
+  private scheduleClustering() {
+    if (this.clusteringTimeout) {
+      clearTimeout(this.clusteringTimeout);
+    }
+
+    this.clusteringTimeout = setTimeout(() => {
+      this.setupClustering();
+      this.clusteringTimeout = null;
+    }, 300);
+  }
+
+  private setupClustering() {
+    if (!this.map) return;
+
+    if (this.vehicleClusterer) {
+      this.vehicleClusterer.clearMarkers();
+      this.vehicleClusterer = null;
+    }
+
+    if (this.stopClusterer) {
+      this.stopClusterer.clearMarkers();
+      this.stopClusterer = null;
+    }
+
+    if (this.vehicleMarkers.length === 0 && this.stopMarkers.length === 0) {
+      this.vehicleMarkerRefs = [];
+      this.stopMarkerRefs = [];
+      return;
+    }
+
+    const nativeMarkers = this.mapMarkers
+      .map(marker => marker.marker)
+      .filter((m): m is google.maps.Marker => !!m);
+
+    this.vehicleMarkerRefs = nativeMarkers.filter((marker, index) =>
+      index < this.vehicleMarkers.length
+    );
+
+    this.stopMarkerRefs = nativeMarkers.filter((marker, index) =>
+      index >= this.vehicleMarkers.length &&
+      index < this.vehicleMarkers.length + this.stopMarkers.length
+    );
+
+    if (this.vehicleMarkerRefs.length > 0) {
+      this.vehicleClusterer = new MarkerClusterer({
+        map: this.map,
+        markers: this.vehicleMarkerRefs,
+        algorithm: new SuperClusterAlgorithm({
+          radius: 50,
+          minPoints: 3,
+          maxZoom: 16
+        })
+      });
+    }
+
+    if (this.stopMarkerRefs.length > 0) {
+      this.stopClusterer = new MarkerClusterer({
+        map: this.map,
+        markers: this.stopMarkerRefs,
+        algorithm: new SuperClusterAlgorithm({
+          radius: 40,
+          minPoints: 5,
+          maxZoom: 15
+        })
+      });
+    }
+  }
+
+  private clearMapSelection() {
+    this.selectedMarker = null;
+    this.selectedMarkerData = null;
+    this.infoWindow?.close();
+  }
+
+  private clearVehicleMarkers() {
+    if (this.vehicleClusterer) {
+      this.vehicleClusterer.clearMarkers();
+      this.vehicleClusterer = null;
+    }
+
+    this.vehicleMarkerRefs.forEach(marker => marker.setMap(null));
+    this.vehicleMarkerRefs = [];
+    this.vehicleMarkers = [];
+  }
+
+  private clearStopMarkers() {
+    if (this.stopClusterer) {
+      this.stopClusterer.clearMarkers();
+      this.stopClusterer = null;
+    }
+
+    this.stopMarkerRefs.forEach(marker => marker.setMap(null));
+    this.stopMarkerRefs = [];
+    this.stopMarkers = [];
   }
 
   private startPulse() {
@@ -184,7 +352,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     this.clearPulseCircles();
 
     this.pulseCircleRefs = [0, 1, 2].map(() => {
-      const circle = new google.maps.Circle({
+      return new google.maps.Circle({
         map: this.map!,
         center: this.geofenceCenter,
         radius: 2000,
@@ -196,8 +364,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         fillOpacity: 0.06,
         zIndex: 2
       });
-
-      return circle;
     });
   }
 
@@ -206,87 +372,10 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     this.pulseCircleRefs = [];
   }
 
-  ngOnDestroy() {
-    if (this.pulseAnimationId !== null) {
-      cancelAnimationFrame(this.pulseAnimationId);
-      this.pulseAnimationId = null;
-    }
-
-    this.clearPulseCircles();
-  }
-
-  onMapInit(map: google.maps.Map) {
-    this.map = map;
-    this.fitMapToGeofence();
-    this.fitMapToJourney();
-
-    if (this.geofenceCenter) {
-      this.initPulseCircles();
-    }
-
-    if (this.pulseAnimationId === null) {
-      this.startPulse();
-    }
-  }
-
-  private setupClustering() {
-    if (!this.map) return;
-
-    // Clear existing clusterers
-    if (this.vehicleClusterer) {
-      this.vehicleClusterer.clearMarkers();
-    }
-    if (this.stopClusterer) {
-      this.stopClusterer.clearMarkers();
-    }
-
-    // Get native Google Maps markers from the template
-    setTimeout(() => {
-      const nativeMarkers = this.mapMarkers.map(marker => marker.marker).filter(m => m !== undefined);
-
-      // Separate vehicle and stop markers
-      this.vehicleMarkerRefs = nativeMarkers.filter((marker, index) =>
-        index < this.vehicleMarkers.length && marker !== undefined
-      ) as google.maps.Marker[];
-
-      this.stopMarkerRefs = nativeMarkers.filter((marker, index) =>
-        index >= this.vehicleMarkers.length &&
-        index < this.vehicleMarkers.length + this.stopMarkers.length &&
-        marker !== undefined
-      ) as google.maps.Marker[];
-
-      // Create vehicle clusterer
-      if (this.vehicleMarkerRefs.length > 0) {
-        this.vehicleClusterer = new MarkerClusterer({
-          map: this.map,
-          markers: this.vehicleMarkerRefs,
-          algorithm: new SuperClusterAlgorithm({
-            radius: 50,
-            minPoints: 3,
-            maxZoom: 16
-          })
-        });
-      }
-
-      // Create stop clusterer
-      if (this.stopMarkerRefs.length > 0) {
-        this.stopClusterer = new MarkerClusterer({
-          map: this.map,
-          markers: this.stopMarkerRefs,
-          algorithm: new SuperClusterAlgorithm({
-            radius: 40,
-            minPoints: 5,
-            maxZoom: 15
-          })
-        });
-      }
-    }, 500);
-  }
-
   private panToLocation(location: google.maps.LatLngLiteral) {
     if (this.map) {
       this.map.panTo(location);
-      this.map.setZoom(15); // Zoom in to show details
+      this.map.setZoom(15);
     }
   }
 
@@ -313,10 +402,12 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     }
 
     const bounds = new google.maps.LatLngBounds();
-    this.journey.mapSegments.forEach((segment) => {
-      segment.path.forEach((point) => bounds.extend(point));
+
+    this.journey.mapSegments.forEach(segment => {
+      segment.path.forEach(point => bounds.extend(point));
     });
-    this.journey.mapMarkers.forEach((marker) => bounds.extend(marker.position));
+
+    this.journey.mapMarkers.forEach(marker => bounds.extend(marker.position));
 
     if (!bounds.isEmpty()) {
       this.map.fitBounds(bounds, 64);
@@ -324,6 +415,13 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   }
 
   updateStopMarkers() {
+    this.clearMapSelection();
+    this.clearStopMarkers();
+
+    if (!this.stops || this.stops.length === 0) {
+      return;
+    }
+
     const stationIconSvg = '/icons/gps.svg';
 
     this.stopMarkers = this.stops.map((stop, index) => ({
@@ -342,7 +440,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       data: stop
     }));
 
-    setTimeout(() => this.setupClustering(), 500);
+    this.scheduleClustering();
   }
 
   updateUserMarker() {
@@ -376,12 +474,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     }
   }
 
-  onMapClick() {
-    if (this.infoWindow) {
-      this.infoWindow.close();
-    }
-  }
-
   private updateJourneyOverlay() {
     if (!this.journey) {
       this.journeyMarkerData = [];
@@ -389,7 +481,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       return;
     }
 
-    this.journeyMarkerData = this.journey.mapMarkers.map((marker) => ({
+    this.journeyMarkerData = this.journey.mapMarkers.map(marker => ({
       id: `journey-${marker.id}`,
       type: 'journey',
       position: marker.position,
@@ -403,7 +495,12 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: marker.kind === 'transfer' ? 11 : 9,
-          fillColor: marker.kind === 'start' ? '#059669' : marker.kind === 'end' ? '#dc2626' : '#d97706',
+          fillColor:
+            marker.kind === 'start'
+              ? '#059669'
+              : marker.kind === 'end'
+                ? '#dc2626'
+                : '#d97706',
           fillOpacity: 1,
           strokeColor: '#ffffff',
           strokeWeight: 2
@@ -422,26 +519,21 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         strokeColor: segment.kind === 'walk' ? '#2563eb' : '#d97706',
         strokeOpacity: segment.kind === 'walk' ? 0 : 0.9,
         strokeWeight: segment.kind === 'walk' ? 2 : 5,
-        icons: segment.kind === 'walk' ? [{
-          icon: {
-            path: 'M 0,-1 0,1',
-            strokeOpacity: 1,
-            scale: 3
-          },
-          offset: '0',
-          repeat: '12px'
-        }] : undefined
+        icons: segment.kind === 'walk'
+          ? [{
+              icon: {
+                path: 'M 0,-1 0,1',
+                strokeOpacity: 1,
+                scale: 3
+              },
+              offset: '0',
+              repeat: '12px'
+            }]
+          : undefined
       }
     }));
 
     setTimeout(() => this.fitMapToJourney(), 150);
-  }
-
-  onMarkerClick(markerRef: MapMarker, markerData: MapMarkerData) {
-    this.selectedMarkerData = markerData;
-    this.selectedMarker = markerData.data;
-    this.markerClick.emit(markerData.data);
-    setTimeout(() => { this.infoWindow.open(markerRef); }, 50);
   }
 
   getBearingDirection(bearing: number): string {
@@ -474,9 +566,11 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     if (agency === 'ktmb') {
       return '#0033A0';
     }
+
     if (agency.startsWith('mybas')) {
       return '#6A1B9A';
     }
+
     if (agency === 'prasarana') {
       if (category === 'rapid-bus-kl') return '#D32F2F';
       if (category === 'rapid-bus-penang') return '#00897B';
@@ -484,10 +578,14 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       if (category === 'rapid-bus-mrtfeeder') return '#7B1FA2';
       if (category === 'rapid-rail-kl') return '#C2185B';
     }
+
     return '#455A64';
   }
 
-  private vehicleIconType(agency: string, category?: string | null): 'bus' | 'feeder' | 'rail' | 'train' {
+  private vehicleIconType(
+    agency: string,
+    category?: string | null
+  ): 'bus' | 'feeder' | 'rail' | 'train' {
     const normalizedAgency = agency?.toLowerCase() ?? '';
     const normalizedCategory = category?.toLowerCase() ?? '';
 
@@ -495,7 +593,12 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       return 'train';
     }
 
-    if (normalizedCategory.includes('rail') || normalizedCategory.includes('mrt') || normalizedCategory.includes('lrt') || normalizedCategory.includes('monorail')) {
+    if (
+      normalizedCategory.includes('rail') ||
+      normalizedCategory.includes('mrt') ||
+      normalizedCategory.includes('lrt') ||
+      normalizedCategory.includes('monorail')
+    ) {
       return 'rail';
     }
 
@@ -506,7 +609,10 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     return 'bus';
   }
 
-  private vehicleIconSvg(type: 'bus' | 'feeder' | 'rail' | 'train', color: string): string {
+  private vehicleIconSvg(
+    type: 'bus' | 'feeder' | 'rail' | 'train',
+    color: string
+  ): string {
     const busBody = `<rect x="12" y="14" width="24" height="16" rx="5" fill="${color}" /><rect x="16" y="18" width="16" height="6" rx="2" fill="white" opacity="0.95" /><circle cx="18" cy="32" r="3" fill="#1f2937" /><circle cx="30" cy="32" r="3" fill="#1f2937" />`;
     const feederBody = `<rect x="11" y="13" width="26" height="18" rx="8" fill="${color}" /><rect x="16" y="18" width="16" height="6" rx="3" fill="white" opacity="0.95" /><circle cx="18" cy="32" r="3" fill="#1f2937" /><circle cx="30" cy="32" r="3" fill="#1f2937" /><path d="M24 8l2 4h-4l2-4z" fill="${color}" />`;
     const railBody = `<rect x="11" y="11" width="26" height="22" rx="8" fill="${color}" /><rect x="16" y="16" width="16" height="8" rx="3" fill="white" opacity="0.95" /><path d="M17 34h14" stroke="#1f2937" stroke-width="2" stroke-linecap="round" /><path d="M20 37l-2 3M28 37l2 3" stroke="#1f2937" stroke-width="2" stroke-linecap="round" />`;
@@ -529,6 +635,13 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
   }
 
   updateVehicleMarkers() {
+    this.clearMapSelection();
+    this.clearVehicleMarkers();
+
+    if (!this.vehicles || this.vehicles.length === 0) {
+      return;
+    }
+
     this.vehicleMarkers = this.vehicles.map((vehicle, index) => {
       const color = this.agencyColor(vehicle.feed_agency, vehicle.feed_category);
       const iconType = this.vehicleIconType(vehicle.feed_agency, vehicle.feed_category);
@@ -550,14 +663,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
       };
     });
 
-    setTimeout(() => this.setupClustering(), 500);
-  }
-
-  onMapCenterChange() {
-    // The center is handled by the google-map component
-  }
-
-  trackByMarkerId(index: number, marker: MapMarkerData): string {
-    return marker.id;
+    this.scheduleClustering();
   }
 }

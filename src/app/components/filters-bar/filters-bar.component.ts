@@ -52,45 +52,35 @@ export class FiltersBarComponent implements OnInit, OnChanges {
   }
 
   onAgencySelect() {
-    // Clear all dependent filters
     this.selectedCategory = '';
     this.selectedRoute = null;
     this.categories = [];
-
+  
     this.routeSelect.emit(null);
     this.stopSearch.emit('');
-
+  
     if (this.selectedAgency && this.feeds) {
-      // Extract categories for selected agency from feed objects
       const staticFeeds = this.feeds.static.filter((f: any) => f.agency === this.selectedAgency);
       const realtimeFeeds = this.feeds.realtime.filter((f: any) => f.agency === this.selectedAgency);
-
-      // Get unique categories and filter out null values
+  
       this.categories = [...new Set([
         ...staticFeeds.map((f: any) => f.category).filter(Boolean),
         ...realtimeFeeds.map((f: any) => f.category).filter(Boolean)
       ])].sort();
-
-      // Emit agency change
+  
       this.agencyChange.emit(this.selectedAgency);
-
-      // If there are categories, "All Categories" is selected by default (empty string)
-      // No need to emit category change since it's empty
+      this.categoryChange.emit('');
     } else {
-      // If agency is cleared, emit empty values
       this.agencyChange.emit('');
       this.categoryChange.emit('');
     }
   }
 
   onCategorySelect() {
-    // Clear selected route when category changes
     this.selectedRoute = null;
     this.routeSelect.emit(null);
-
-    // Emit category change (empty string means "All Categories")
     this.categoryChange.emit(this.selectedCategory);
-  }
+  }  
 
   onRouteSelect() {
     if (this.selectedRoute) {
@@ -103,8 +93,7 @@ export class FiltersBarComponent implements OnInit, OnChanges {
     this.selectedCategory = '';
     this.selectedRoute = null;
     this.categories = [];
-
-    // Emit all clear events
+  
     this.routeSelect.emit(null);
     this.stopSearch.emit('');
     this.agencyChange.emit('');

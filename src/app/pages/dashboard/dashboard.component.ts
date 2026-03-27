@@ -127,37 +127,30 @@ export class DashboardComponent {
 
   // ============== DATA LOADING ==============
   onAgencyChange(agency: string) {
+    this.resetDashboardState();
+
     this.selectedAgency = agency;
     this.selectedCategory = '';
-    this.selectedRoute = null;
-    this.showTimetable = false;
-    this.selectedJourney = null;
-
-    this.routes = [];
-    this.stops = [];
-    this.vehicles = [];
-    this.nearestTransports = [];
 
     if (agency) {
       this.loadRoutes();
       this.loadStops();
-      this.loadVehicles(); // Add this
+      this.loadVehicles();
       this.findNearestTransport();
     }
   }
 
   onCategoryChange(category: string) {
-    this.selectedCategory = category;
-    this.routes = [];
-    this.stops = [];
-    this.vehicles = [];
-    this.nearestTransports = [];
-    this.selectedJourney = null;
+    this.resetDashboardState();
 
-    this.loadRoutes();
-    this.loadStops();
-    this.loadVehicles(); // Add this
-    this.findNearestTransport();
+    this.selectedCategory = category;
+
+    if (this.selectedAgency) {
+      this.loadRoutes();
+      this.loadStops();
+      this.loadVehicles();
+      this.findNearestTransport();
+    }
   }
 
 
@@ -197,30 +190,34 @@ export class DashboardComponent {
     });
   }
 
+  private resetRouteState() {
+    this.selectedRoute = null;
+    this.selectedTripId = '';
+    this.selectedJourney = null;
+    this.showTimetable = false;
+    this.trips = [];
+    this.tripStops = [];
+    this.loading.timetable = false;
+
+    if (this.timetableSub) this.timetableSub.unsubscribe();
+    if (this.tripStopsSub) this.tripStopsSub.unsubscribe();
+
+    this.stopTimesSubs.forEach(s => s.unsubscribe());
+    this.stopTimesSubs = [];
+  }
+
   onRouteSelect(route: Route | null) {
+    this.resetRouteState();
+
     if (!route) {
-      this.selectedRoute = null;
-      this.showTimetable = false;
-      this.trips = [];
-      this.tripStops = [];
-      this.selectedJourney = null;
-  
-      if (this.timetableSub) this.timetableSub.unsubscribe();
-      this.stopTimesSubs.forEach(s => s.unsubscribe());
-      this.stopTimesSubs = [];
-  
       this.findNearestTransport();
       return;
     }
-  
+
     this.selectedRoute = route;
     this.showTimetable = true;
     this.loading.timetable = true;
-  
-    if (this.timetableSub) this.timetableSub.unsubscribe();
-    this.stopTimesSubs.forEach(s => s.unsubscribe());
-    this.stopTimesSubs = [];
-  
+
     this.timetableSub = this.gtfsService
       .getTripsForRoute(this.selectedAgency, route.route_id, this.selectedCategory)
       .subscribe({
@@ -237,7 +234,7 @@ export class DashboardComponent {
           this.loading.timetable = false;
         }
       });
-  
+
     this.findNearestTransport();
   }
 
@@ -448,5 +445,35 @@ export class DashboardComponent {
   closeTimetable() {
     this.showTimetable = false;
     this.selectedRoute = null;
+  }
+
+  private resetDashboardState() {
+    this.selectedRoute = null;
+    this.selectedTripId = '';
+    this.selectedJourney = null;
+    this.showTimetable = false;
+
+    this.routes = [];
+    this.stops = [];
+    this.vehicles = [];
+    this.trips = [];
+    this.tripStops = [];
+    this.nearestTransports = [];
+
+    this.loading.routes = false;
+    this.loading.stops = false;
+    this.loading.vehicles = false;
+    this.loading.nearest = false;
+    this.loading.timetable = false;
+
+    if (this.routesSub) this.routesSub.unsubscribe();
+    if (this.stopsSub) this.stopsSub.unsubscribe();
+    if (this.vehiclesSub) this.vehiclesSub.unsubscribe();
+    if (this.nearestSub) this.nearestSub.unsubscribe();
+    if (this.timetableSub) this.timetableSub.unsubscribe();
+    if (this.tripStopsSub) this.tripStopsSub.unsubscribe();
+
+    this.stopTimesSubs.forEach(s => s.unsubscribe());
+    this.stopTimesSubs = [];
   }
 }
