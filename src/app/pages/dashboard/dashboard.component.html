@@ -14,7 +14,7 @@
   <!-- Main Content -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4 flex flex-col">
     <!-- Filters Bar Component -->
-    <app-filters-bar [feeds]="feeds" [routes]="routes" [loading]="loading.routes"
+    <app-filters-bar [feeds]="feeds" [routes]="routes" [feedsLoading]="loading.feeds" [loading]="loading.routes"
       (agencyChange)="onAgencyChange($event)" (categoryChange)="onCategoryChange($event)"
       (routeSelect)="onRouteSelect($event)" (stopSearch)="loadStops($event)">
     </app-filters-bar>

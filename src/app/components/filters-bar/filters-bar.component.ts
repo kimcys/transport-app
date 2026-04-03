@@ -14,6 +14,7 @@ import { NamePipe } from '../../pipes/name.pipe';
 export class FiltersBarComponent implements OnInit, OnChanges {
   @Input() feeds: Feed | null = null;
   @Input() routes: Route[] = [];
+  @Input() feedsLoading = false;
   @Input() loading = false;
 
   @Output() agencyChange = new EventEmitter<string>();
@@ -27,6 +28,18 @@ export class FiltersBarComponent implements OnInit, OnChanges {
 
   agencies: string[] = [];
   categories: string[] = [];
+
+  get agencySelectionDisabled(): boolean {
+    return this.feedsLoading || !this.feeds || this.agencies.length === 0;
+  }
+
+  get categorySelectionDisabled(): boolean {
+    return this.agencySelectionDisabled || !this.selectedAgency;
+  }
+
+  get routeSelectionDisabled(): boolean {
+    return this.categorySelectionDisabled || this.loading;
+  }
 
   ngOnInit() {
     this.extractAgencies();
