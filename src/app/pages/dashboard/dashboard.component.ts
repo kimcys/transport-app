@@ -121,7 +121,6 @@ export class DashboardComponent {
       this.locationService.userLocation$.subscribe(location => {
         this.userLocation = location;
         if (location) {
-          this.mapCenter = { lat: location.lat, lng: location.lng };
           if (this.selectedAgency) {
             this.findNearestTransport();
           }

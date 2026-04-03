@@ -76,7 +76,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
     options: google.maps.PolylineOptions;
   }> = [];
 
-  constructor(private ngZone: NgZone) {}
+  constructor(private ngZone: NgZone) { }
 
   options: google.maps.MapOptions = {
     mapTypeId: 'roadmap',
@@ -119,10 +119,6 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
     if (changes['userLocation']) {
       this.updateUserMarker();
-
-      if (this.map && this.geofenceCenter && !this.journey) {
-        this.fitMapToGeofence();
-      }
     }
 
     if (changes['journey']) {
@@ -167,7 +163,7 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
 
   onMapInit(map: google.maps.Map) {
     this.map = map;
-
+    
     this.fitMapToGeofence();
     this.fitMapToJourney();
 
@@ -521,14 +517,14 @@ export class TransportMapComponent implements OnChanges, AfterViewInit, OnDestro
         strokeWeight: segment.kind === 'walk' ? 2 : 5,
         icons: segment.kind === 'walk'
           ? [{
-              icon: {
-                path: 'M 0,-1 0,1',
-                strokeOpacity: 1,
-                scale: 3
-              },
-              offset: '0',
-              repeat: '12px'
-            }]
+            icon: {
+              path: 'M 0,-1 0,1',
+              strokeOpacity: 1,
+              scale: 3
+            },
+            offset: '0',
+            repeat: '12px'
+          }]
           : undefined
       }
     }));
