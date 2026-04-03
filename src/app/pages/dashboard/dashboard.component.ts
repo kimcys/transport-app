@@ -81,6 +81,7 @@ export class DashboardComponent {
   private timetableSub?: Subscription;
   private tripStopsSub?: Subscription;
   private stopTimesSubs: Subscription[] = [];
+  private hasCenteredOnInitialLocation = false;
 
   constructor(
     private gtfsService: GtfsService,
@@ -121,6 +122,11 @@ export class DashboardComponent {
       this.locationService.userLocation$.subscribe(location => {
         this.userLocation = location;
         if (location) {
+          if (!this.hasCenteredOnInitialLocation) {
+            this.mapCenter = { lat: location.lat, lng: location.lng };
+            this.hasCenteredOnInitialLocation = true;
+          }
+
           if (this.selectedAgency) {
             this.findNearestTransport();
           }
