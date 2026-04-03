@@ -29,4 +29,16 @@ describe('FiltersBarComponent', () => {
     expect(agencySelect.disabled).toBeTrue();
     expect(agencySelect.options[0].textContent?.trim()).toBe('Loading agencies...');
   });
+
+  it('should show retry state when feeds fail to load', () => {
+    component.feedsError = 'Could not load agencies. Check your connection and try again.';
+    fixture.detectChanges();
+
+    const agencySelect: HTMLSelectElement = fixture.nativeElement.querySelector('select');
+    const retryButton: HTMLButtonElement = fixture.nativeElement.querySelector('button[type="button"]');
+
+    expect(agencySelect.disabled).toBeTrue();
+    expect(agencySelect.options[0].textContent?.trim()).toBe('Failed to load agencies');
+    expect(retryButton.textContent?.trim()).toBe('Retry');
+  });
 });

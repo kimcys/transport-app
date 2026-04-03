@@ -35,6 +35,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 export class DashboardComponent {
 
   feeds: Feed | null = null;
+  feedsError = '';
   vehicles: VehiclePosition[] = [];
   routes: Route[] = [];
   stops: Stop[] = [];
@@ -98,14 +99,18 @@ export class DashboardComponent {
 
   // ============== INITIALIZATION ==============
   loadInitialData() {
+    this.feedsError = '';
+    this.feeds = null;
     this.loading.feeds = true;
     this.gtfsService.getFeeds().subscribe({
       next: (feeds) => {
         this.feeds = feeds;
+        this.feedsError = '';
         this.loading.feeds = false;
       },
       error: (err) => {
         console.error('Error loading feeds', err);
+        this.feedsError = 'Could not load agencies. Check your connection and try again.';
         this.loading.feeds = false;
       }
     });

@@ -15,12 +15,14 @@ export class FiltersBarComponent implements OnInit, OnChanges {
   @Input() feeds: Feed | null = null;
   @Input() routes: Route[] = [];
   @Input() feedsLoading = false;
+  @Input() feedsError = '';
   @Input() loading = false;
 
   @Output() agencyChange = new EventEmitter<string>();
   @Output() categoryChange = new EventEmitter<string>();
   @Output() routeSelect = new EventEmitter<Route | null>();
   @Output() stopSearch = new EventEmitter<string>();
+  @Output() retryFeeds = new EventEmitter<void>();
 
   selectedAgency = '';
   selectedCategory = '';
@@ -30,7 +32,7 @@ export class FiltersBarComponent implements OnInit, OnChanges {
   categories: string[] = [];
 
   get agencySelectionDisabled(): boolean {
-    return this.feedsLoading || !this.feeds || this.agencies.length === 0;
+    return this.feedsLoading || (!this.feedsError && this.agencies.length === 0);
   }
 
   get categorySelectionDisabled(): boolean {
@@ -39,6 +41,22 @@ export class FiltersBarComponent implements OnInit, OnChanges {
 
   get routeSelectionDisabled(): boolean {
     return this.categorySelectionDisabled || this.loading;
+  }
+
+  get agencyPlaceholder(): string {
+    if (this.feedsLoading) {
+      return 'Loading agencies...';
+    }
+
+    if (this.feedsError) {
+      return 'Failed to load agencies';
+    }
+
+    if (this.agencies.length === 0) {
+      return 'No agencies available';
+    }
+
+    return 'Select agency';
   }
 
   ngOnInit() {
@@ -111,5 +129,9 @@ export class FiltersBarComponent implements OnInit, OnChanges {
     this.stopSearch.emit('');
     this.agencyChange.emit('');
     this.categoryChange.emit('');
+  }
+
+  onRetryFeeds() {
+    this.retryFeeds.emit();
   }
 }
